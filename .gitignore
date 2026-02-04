@@ -3,13 +3,9 @@
 **/.ipynb_checkpoints/
 *.egg
 *.egg-info  
-/dataflow/example/ReasoningPipeline/pipeline_math_step*.jsonl
-!/dataflow/example/ReasoningPipeline/pipeline_math.json
 
 .DS_Store
 
-dataflow/example/KBCleaningPipeline/raw
-requirement_added.txt
 mineru.json
 
 test/example
@@ -18,29 +14,21 @@ cache
 cache_local
 .cache
 cache*
-dataflow_cache/
-dataflow/operators/eval/GeneralText/gen/cider/coco-val-df.p
 test_mineru
 test/test_cli
 
 .vscode
-
 dist
 build
 *.html
-
 *.xlsx
-
 lib
-
 hf_cache/
 downloaded_databases/
 downloaded_databases_vec/
-
-test25*
-df_test/*
-
 outputs_mineru/
+
+*.pdf
 sample_pdfs/
 
 copy_pdfs.py

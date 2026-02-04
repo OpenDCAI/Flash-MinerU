@@ -1,1 +1,12 @@
 ray
+torch
+
+numpy
+opencv-python
+pypdfium2
+mineru_vl_utils
+
+magika
+beautifulsoup4
+six
+loguru
