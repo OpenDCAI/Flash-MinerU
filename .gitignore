@@ -39,3 +39,8 @@ downloaded_databases_vec/
 
 test25*
 df_test/*
+
+outputs_mineru/
+sample_pdfs/
+
+copy_pdfs.py

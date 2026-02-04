@@ -1,5 +1,17 @@
 from flash_mineru import MineruEngine
+import os, time
 
-engine = MineruEngine()
-data = ["sample1.pdf", "sample2.pdf"]
-result = engine.run(data)  # 也不一定真返回具体值，也可以入参传入输出路径，然后直接写出到具体路径。看怎么方便怎么来
+start_time = time.perf_counter()
+engine = MineruEngine(batch_size=64, replicas=3, num_gpus_per_replica=0.25)
+data = []
+
+for file in os.listdir("sample_pdfs"):
+    data.append(os.path.abspath(os.path.join("sample_pdfs", file)))
+    
+result = engine.run(data)
+
+print(result)
+
+end_time = time.perf_counter()
+
+print(f"Total time taken: {end_time - start_time} seconds")
