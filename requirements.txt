@@ -1,8 +1,8 @@
 ray
 torch
 
-numpy
-opencv-python
+numpy>=1.26,<2.0
+opencv-python-headless # No GUI and visualization needed
 pypdfium2
 mineru_vl_utils
 

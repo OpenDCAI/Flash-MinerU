@@ -43,3 +43,4 @@ dependencies = {file = "requirements.txt"}
 
 [project.optional-dependencies]
 vllm = ["vllm"]
+sglang = ["sglang"] # Future Support
