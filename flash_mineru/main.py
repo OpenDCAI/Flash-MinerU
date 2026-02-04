@@ -9,22 +9,24 @@ from flash_mineru.mineru_core.dispatch_mineru_class import (
     ProcessImagesOp,
 )
 
-from typing import Optional
+import os
+from typing import Optional, List
+
+def abspaths(paths: List[str]) -> List[str]:
+    return [os.path.abspath(p) for p in paths]
 
 class MinerUPipeline():
 
     def __init__(
         self,
         *,
+        model: str = "/home/dataset-local/models/MinerU2.5-2509-1.2B",
         replicas: int = 1,
         num_gpus_per_replica: float = 1.0,
-        model: str = "/home/dataset-local/models/MinerU2.5-2509-1.2B",
-        device: str = "cuda",
+        engine_gpu_util_rate_to_ray_cap: float = 0.9,
         save_dir: str = "outputs_mineru",
-        meta_json_path: str = "outputs/meta_data.json",
     ):
         self.save_dir = save_dir
-        self.meta_json_path = meta_json_path
 
         self.pdf2img = RayModule(
             Pdf2ImageOp,
@@ -35,9 +37,9 @@ class MinerUPipeline():
         self.process_img = RayModule( 
             ProcessImagesOp,
             replicas=replicas,
-            num_gpus_per_replica=num_gpus_per_replica if device.startswith("cuda") else 0.0,
+            num_gpus_per_replica=num_gpus_per_replica,
             dispatch_mode=Dispatch.ALL_SLICED_TO_ALL,
-        ).pre_init(model=model, gpu_memory_utilization=num_gpus_per_replica if device.startswith("cuda") else 0.0)
+        ).pre_init(model=model, gpu_memory_utilization=engine_gpu_util_rate_to_ray_cap * num_gpus_per_replica)
 
         self.img2md = RayModule(
             Convert2MDOp,
@@ -61,12 +63,11 @@ class MineruEngine():
         self,
         *,
         model: str = "/home/dataset-local/models/MinerU2.5-2509-1.2B",
-        device: str = "cuda",
         save_dir: str = "outputs_mineru",
-        meta_json_path: str = "outputs/meta_data.json",
         batch_size: int = 4,
-        replicas: Optional[int] = None,
-        num_gpus_per_replica: Optional[float] = None,
+        replicas: int = 1,
+        num_gpus_per_replica: float = 1,
+        engine_gpu_util_rate_to_ray_cap: float = 0.9,
     ):
         import torch
         gpu_count = torch.cuda.device_count()
@@ -76,21 +77,31 @@ class MineruEngine():
         
         self.pipeline = MinerUPipeline(
             model=model,
-            device=device,
             save_dir=save_dir,
-            meta_json_path=meta_json_path,
-            replicas=replicas if replicas is not None else 4,
-            num_gpus_per_replica=num_gpus_per_replica if replicas is not None else 0.2,
+            replicas=replicas,
+            num_gpus_per_replica=num_gpus_per_replica,
+            engine_gpu_util_rate_to_ray_cap=engine_gpu_util_rate_to_ray_cap,
         )
         self.batch_size = batch_size
 
+    def _check_path_exists(self, path_of_pdfs: list[str]):
+        for path in path_of_pdfs:
+            if not os.path.exists(path):
+                raise FileNotFoundError(f"PDF file not found: {path}")
+            
     def run(self, path_of_pdfs: list[str]):
 
         print("MineruEngine is running... for ", path_of_pdfs)
+        # check file exists
+        self._check_path_exists(path_of_pdfs)
+        # Absolute paths, since Ray worker may have different cwd
+        path_of_pdfs = abspaths(path_of_pdfs)
+
         steps = (len(path_of_pdfs) + self.batch_size - 1) // self.batch_size
         results = []
         for step in range(steps):
             batch_paths = path_of_pdfs[step * self.batch_size : (step + 1) * self.batch_size]
+
             result = self.pipeline.run(batch_paths)
             results.append(result)
             print(f"MineruEngine finished batch {step + 1}/{steps}")
