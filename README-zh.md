@@ -59,9 +59,7 @@ Flash-MinerU 是一个**轻量级、低侵入式**的加速项目，目标是通
 适用于你已经**手动安装好推理引擎**（如 vLLM），或使用包含完整环境的镜像场景：
 
 ```bash
-git clone https://github.com/OpenDCAI/Flash-MinerU.git
-cd Flash-MinerU
-pip install -e .
+pip install flash-mineru
 ````
 
 ### 安装并启用 vLLM 后端（可选）
@@ -69,9 +67,7 @@ pip install -e .
 如果你希望由 Flash-MinerU 一并安装 vLLM 作为推理后端：
 
 ```bash
-git clone https://github.com/OpenDCAI/Flash-MinerU.git
-cd Flash-MinerU
-pip install -e ".[vllm]"
+pip install flash-mineru[vllm]
 ```
 
 ---
@@ -121,7 +117,7 @@ print(results)  # list[list[str]]
 
 ---
 
-## 🗺️ Roadmap
+## 🗺️ Roadmap 未来计划
 * [ ] Benchmark 脚本（单卡 vs 多 replica 对比）
 * [ ] 支持更多推理后端（如 sglang）
 * [ ] 服务化形态（HTTP API / 任务队列）

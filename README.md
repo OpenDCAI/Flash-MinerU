@@ -62,9 +62,7 @@ This project is positioned as a **parallelization and engineering accelerator**,
 Suitable if you have **already installed the inference backend manually** (e.g., vLLM), or are using an image with a prebuilt environment:
 
 ```bash
-git clone https://github.com/OpenDCAI/Flash-MinerU.git
-cd Flash-MinerU
-pip install -e .
+pip install flash-mineru
 ```
 
 ### Install with vLLM backend enabled (optional)
@@ -72,9 +70,7 @@ pip install -e .
 If you want Flash-MinerU to install vLLM as the inference backend for you:
 
 ```bash
-git clone https://github.com/OpenDCAI/Flash-MinerU.git
-cd Flash-MinerU
-pip install -e ".[vllm]"
+pip install flash-mineru[vllm]
 ```
 
 ---
