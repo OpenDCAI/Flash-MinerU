@@ -1,3 +1,13 @@
+# Copyright (c) OpenDataLab
+# This file is derived from the MinerU project:
+# https://github.com/opendatalab/MinerU
+#
+# Modifications and adaptations have been made by the Flash-MinerU authors.
+#
+# This file is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
+# You may obtain a copy of the License at:
+#     https://www.gnu.org/licenses/agpl-3.0.html
+
 from typing import Optional, Union
 from contextlib import contextmanager
 import pypdfium2 as pdfium
