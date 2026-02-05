@@ -77,11 +77,9 @@ pip install flash-mineru[vllm]
 ### 最简 Python API 示例
 
 ```python
-import ray
 from flash_mineru import MineruEngine
 
-ray.init()  # 或 ray.init(address="auto")
-
+# PDF的路径
 pdfs = [
     "resnet.pdf",
     "yolo.pdf",
@@ -91,14 +89,14 @@ pdfs = [
 engine = MineruEngine(
     model="<path_to_local>/MinerU2.5-2509-1.2B",
     # 模型可从 https://huggingface.co/opendatalab/MinerU2.5-2509-1.2B 下载
-    batch_size=1,              # 单个模型实例内部同时处理的 PDF 数量
+    batch_size=2,              # 单个模型实例内部同时处理的 PDF 数量
     replicas=3,                # 并行启动的 vLLM / 模型实例数量
     num_gpus_per_replica=0.5, # 每个实例占用的 GPU 显存比例（vLLM KV cache）
     save_dir="outputs_mineru", # 解析结果保存路径
 )
 
 results = engine.run(pdfs)
-print(results)  # list[list[str]]
+print(results)  # list[list[str]], 输出文件夹的名称
 ```
 
 ### 输出说明
@@ -114,6 +112,48 @@ print(results)  # list[list[str]]
   ```
   <save_dir>/<pdf_name>/vlm/<pdf_name>.md
   ```
+
+---
+
+## 📊 Benchmark
+<details>
+<summary><strong>在多 GPU 环境下实现约 4× 的端到端加速（实验细节）</strong></summary>
+
+### 实验设置
+
+- **数据集**
+  - 23 篇学术论文 PDF（每篇 9～37 页）
+  - 每篇复制 16 份
+  - 共 **368 个中等长度 PDF**
+
+- **版本**
+  - MinerU：官方 **v2.7.5**
+  - Flash-MinerU：内部部分逻辑基于 **MinerU v2.5.x**，对 VLM 推理阶段进行并行化加速
+
+- **硬件**
+  - 单机 **8 × NVIDIA A100**
+
+---
+
+### 实验结果
+
+| 方案 | 推理配置 | 总耗时 |
+|----|----|----|
+| MinerU（原生） | vLLM backend | ~65 min |
+| Flash-MinerU | 16 × VLM 进程，单机 8 卡 | **~16 min** |
+| Flash-MinerU | 3 × VLM 进程，单机 1 卡 | ~40 min |
+
+---
+
+### 结论
+
+- 在 **相同 8 卡 A100 环境**下，Flash-MinerU 相比原生 MinerU 实现了 **约 4× 的端到端加速**
+- 即使在 **单卡环境**下，通过多进程并行 VLM 推理，仍能显著提升整体吞吐
+- 性能提升主要来自 **VLM 推理阶段的并行化与更充分的 GPU 利用**
+
+> 注：Benchmark 关注整体吞吐表现，输出结构与结果质量与 MinerU 保持一致。
+
+</details>
 
 ---
 

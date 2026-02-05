@@ -80,11 +80,9 @@ pip install flash-mineru[vllm]
 ### Minimal Python API example
 
 ```python
-import ray
 from flash_mineru import MineruEngine
 
-ray.init()  # or ray.init(address="auto")
-
+# Path to PDFs
 pdfs = [
     "resnet.pdf",
     "yolo.pdf",
@@ -94,14 +92,14 @@ pdfs = [
 engine = MineruEngine(
     model="<path_to_local>/MinerU2.5-2509-1.2B",
     # Model can be downloaded from https://huggingface.co/opendatalab/MinerU2.5-2509-1.2B
-    batch_size=1,              # Number of PDFs processed concurrently per model instance
+    batch_size=2,              # Number of PDFs processed concurrently per model instance
     replicas=3,                # Number of parallel vLLM / model instances
     num_gpus_per_replica=0.5, # Fraction of GPU memory used per instance (vLLM KV cache)
     save_dir="outputs_mineru", # Output directory for parsed results
 )
 
 results = engine.run(pdfs)
-print(results)  # list[list[str]]
+print(results)  # list[list[str]], dir name of the output files
 ```
 
 ### Output structure
@@ -117,6 +115,48 @@ print(results)  # list[list[str]]
   ```
   <save_dir>/<pdf_name>/vlm/<pdf_name>.md
   ```
+
+---
+
+## 📊 Benchmark
+<details>
+<summary><strong>~4× end-to-end speedup on multi-GPU setups (experimental details)</strong></summary>
+
+### Experimental Setup
+
+- **Dataset**
+  - 23 academic paper PDFs (each with 9–37 pages)
+  - Each PDF duplicated 16 times
+  - **368 medium-length PDF files** in total
+
+- **Versions**
+  - MinerU: official **v2.7.5**
+  - Flash-MinerU: partially based on logic from **MinerU v2.5.x**, with parallelization applied to the VLM inference stage
+
+- **Hardware**
+  - Single machine with **8 × NVIDIA A100 GPUs**
+
+---
+
+### Results
+
+| Method | Inference Configuration | Total Time |
+|----|----|----|
+| MinerU (vanilla) | vLLM backend | ~65 min |
+| Flash-MinerU | 16 × VLM processes, single machine with 8 GPUs | **~16 min** |
+| Flash-MinerU | 3 × VLM processes, single GPU | ~40 min |
+
+---
+
+### Summary
+
+- Under the **same 8× A100 setup**, Flash-MinerU achieves an **~4× end-to-end speedup** compared to vanilla MinerU
+- Even on a **single-GPU setup**, multi-process VLM inference significantly improves overall throughput
+- The performance gains mainly come from **parallelizing the VLM inference stage** and **more efficient GPU utilization**
+
+> Note: The benchmark focuses on overall throughput. The output structure and result quality remain consistent with MinerU.
+
+</details>
 
 ---
 
