@@ -20,6 +20,7 @@ from flash_mineru.mineru_core.data.data_reader_writer import FileBasedDataWriter
 from flash_mineru.mineru_core.engine.model_output_to_middle_json import result_to_middle_json
 from flash_mineru.mineru_core.engine.vlm_middle_json_mkcontent import union_make as vlm_union_make
 from flash_mineru.mineru_core.utils.enum_class import MakeMode
+import json
 
 def get_end_page_id(end_page_id, pdf_page_num):
     end_page_id = end_page_id if end_page_id is not None and end_page_id >= 0 else pdf_page_num - 1
@@ -148,6 +149,12 @@ class Convert2MDOp:
             img_writer, md_writer = FileBasedDataWriter(local_image_dir), FileBasedDataWriter(local_md_dir)
             middle_json = result_to_middle_json(model_result, image, img_writer)
             md_content_str = vlm_union_make(middle_json["pdf_info"], MakeMode.MM_MD, "images")
+            
+            with open(os.path.join(local_md_dir, f"layout.json"), "w") as f:
+                json.dump(middle_json, f, indent=4)
+                
+            with open(os.path.join(local_md_dir, f"content_list.json"), "w") as f:
+                json.dump(model_result, f, indent=4)
             
             md_writer.write_string(
                 f"{name}.md",
