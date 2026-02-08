@@ -7,6 +7,7 @@
 # This file is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
 # You may obtain a copy of the License at:
 #     https://www.gnu.org/licenses/agpl-3.0.html
+import json
 import os, sys, io
 from vllm import LLM
 from mineru_vl_utils import MinerUClient
@@ -143,16 +144,26 @@ class Convert2MDOp:
         for idx in range(len(model_results)):
             model_result = model_results[idx][0]
             image = images[idx][0]
-            name = Path(image[0]['pdf_path']).stem
-            local_image_dir, local_md_dir = prepare_env(self.output_dir, name, self.parse_method)
+            pdf_file_name = Path(image[0]['pdf_path']).stem
+            local_image_dir, local_md_dir = prepare_env(self.output_dir, pdf_file_name, self.parse_method)
             img_writer, md_writer = FileBasedDataWriter(local_image_dir), FileBasedDataWriter(local_md_dir)
             middle_json = result_to_middle_json(model_result, image, img_writer)
+
+            # make md content string
             md_content_str = vlm_union_make(middle_json["pdf_info"], MakeMode.MM_MD, "images")
-            
             md_writer.write_string(
-                f"{name}.md",
+                f"{pdf_file_name}.md",
                 md_content_str,
             )
-            output.append([f"{name}.md"])
-
+            # write content list json and markdown file
+            content_list = vlm_union_make(middle_json["pdf_info"], MakeMode.CONTENT_LIST, "images")
+            md_writer.write_string(
+                f"{pdf_file_name}_content_list.json",
+                json.dumps(content_list, ensure_ascii=False, indent=4),
+            )
+            # write middle json
+            with open(os.path.join(local_md_dir, f"layout.json"), "w") as f:
+                json.dump(middle_json, f, indent=4)
+                
+            output.append(f"{pdf_file_name}.md")
         return output
