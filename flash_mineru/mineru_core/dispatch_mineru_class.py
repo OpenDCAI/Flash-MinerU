@@ -80,14 +80,14 @@ class Pdf2ImageOp:
             image = []
             with open(str(path), "rb") as input_file:
                 file_bytes = input_file.read()
-                pdf_bytes, end_page_id = convert_pdf_bytes_to_bytes_by_pypdfium2(file_bytes, start_page_id, end_page_id)
-                images_list, pdf_doc = load_images_from_pdf(pdf_bytes, image_type='pil_img', start_page_id=start_page_id, end_page_id=end_page_id)
+                pdf_bytes, end_page_id_this = convert_pdf_bytes_to_bytes_by_pypdfium2(file_bytes, start_page_id, end_page_id)
+                images_list, pdf_doc = load_images_from_pdf(pdf_bytes, image_type='pil_img', start_page_id=start_page_id, end_page_id=end_page_id_this)
                 counter = start_page_id
                 for img in images_list:
                     if img is None:
                         continue
                     width, height = map(int, pdf_doc[counter].get_size())
-                    img.update({'pdf_path': str(path), 'page_id': counter, 'page_width': width, 'page_height': height, 'pdf_len': end_page_id - start_page_id + 1})
+                    img.update({'pdf_path': str(path), 'page_id': counter, 'page_width': width, 'page_height': height, 'pdf_len': end_page_id_this - start_page_id + 1})
                     image.append(img)
                     counter += 1
                 images.append([image])
