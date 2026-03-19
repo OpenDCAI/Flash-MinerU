@@ -91,6 +91,7 @@ class Pdf2ImageOp:
                     image.append(img)
                     counter += 1
                 images.append([image])
+                pdf_doc.close()
 
         return images
     
