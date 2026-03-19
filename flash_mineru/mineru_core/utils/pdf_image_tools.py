@@ -55,6 +55,7 @@ def load_images_from_pdf(
             page = pdf_doc[index]
             image_dict = pdf_page_to_image(page, dpi=dpi, image_type=image_type)
             images_list.append(image_dict)
+            page.close()
 
     return images_list, pdf_doc
 
