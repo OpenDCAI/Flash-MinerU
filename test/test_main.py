@@ -5,9 +5,10 @@ start_time = time.perf_counter()
 
 engine = MineruEngine(
     model="<path_to_model>/MinerU2.5-2509-1.2B",
-    batch_size=1, 
-    replicas=3, 
+    batch_size=1,
+    replicas=3,  # number of replicas (vllm workers) recommended 1 GPU per replica
     num_gpus_per_replica=1,
+    inflight=4,  # max logical batches overlapped in the DAG (default 4); tune for memory / throughput
     save_dir="outputs_mineru",
 )
 data = []
@@ -23,5 +24,4 @@ print("Final Result:")
 print(results)
 
 end_time = time.perf_counter()
-
 print(f"Total time taken: {end_time - start_time} seconds")
