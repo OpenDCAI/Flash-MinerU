@@ -32,3 +32,5 @@ outputs_mineru/
 sample_pdfs/
 
 copy_pdfs.py
+
+benchmark_outputs/

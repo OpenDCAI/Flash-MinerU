@@ -1,6 +1,8 @@
 ray
 torch
 
+transformers>=4.57.3,<5.0.0 # mineru2.5 dependency
+
 numpy>=1.26,<2.0
 opencv-python-headless # No GUI and visualization needed
 pypdfium2
@@ -10,3 +12,4 @@ magika
 beautifulsoup4
 six
 loguru
+psutil
