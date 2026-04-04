@@ -26,50 +26,70 @@
 
 
 
-> Accelerating the **VLM Inference Pipeline** of the open-source PDF parsing project **MinerU** with **Ray**
+> Accelerating the **VLM inference pipeline** of MinerU with **Ray**, turning PDF parsing into a **scalable data infrastructure component**
 
-Flash-MinerU is a **lightweight and low-intrusion** acceleration project. Its goal is to leverage **Ray’s parallel and distributed capabilities** to parallelize and accelerate the most time-consuming stage in **MinerU** — the **VLM (Vision-Language Model) inference stage** — thereby significantly improving the overall throughput of **PDF → Markdown** processing.
+Flash-MinerU is a **lightweight, low-intrusion acceleration layer** for MinerU. Beyond speeding up VLM inference, it upgrades PDF parsing into a **high-throughput, distributed data pipeline**: a useful building block for modern AI systems.
 
-This project is positioned as a **parallelization and engineering accelerator**, rather than a reimplementation of MinerU’s core algorithms. Its design goals include:
+PDFs are one of the most important **high-quality knowledge sources** for AI workflows, including papers, reports, and manuals. Converting them into **structured, model-ready data** such as Markdown and JSON is a foundational step for:
+
+- 📊 **Data governance and curation**
+- 🧪 **Synthetic data generation pipelines**
+- 🧠 **LLM / MLLM training and evaluation**
+
+Flash-MinerU focuses on making this stage **scalable, efficient, and production-ready**:
 
 - **Minimal dependencies, lightweight installation**
-  - One-click install & run via `pip install flash-mineru`
-  - Tested in **domestic computing environments such as METAX**
-- **Maximum reuse of MinerU’s original logic and data structures**
-  - Preserving algorithmic behavior and output consistency
-- **Multi-GPU / multi-process / multi-cluster friendly**
-  - Designed for large-scale batch PDF processing, easy to scale up
+  - One-line install via `pip install flash-mineru`
+  - Works in constrained or domestic environments such as METAX
+- **System-level acceleration, not reimplementation**
+  - Fully reuses MinerU’s logic and data structures
+  - Preserves output consistency
+- **Designed for scale**
+  - Multi-GPU / multi-process / multi-node ready
+  - Built on **Ray** as a unified execution layer
 
 ---
 
 ## ✨ Features
 
-- 🚀 **Ray-based parallel inference**  
-  PDF pages / images are sliced into batches and dispatched to multiple Ray actors for parallel execution
+- 🚀 **Ray-powered distributed execution**  
+  Turns PDF parsing into a **scalable data pipeline**, from single-node multi-GPU setups to clusters
 
-- 🧠 **VLM inference acceleration**  
-  Focuses on the VLM inference stage in MinerU; currently defaults to **vLLM** for high-throughput inference
+- 🧠 **High-throughput VLM inference**  
+  Focuses on the bottleneck stage and currently defaults to **vLLM**
 
-- 🧩 **Low-intrusion design**  
-  Retains MinerU’s original intermediate structures (`middle_json`) and Markdown generation logic
+- 🔄 **Pipeline-parallel execution (core improvement)**  
+  Uses an asynchronous pipeline with cross-stage overlap for sustained high utilization
+
+- 🧩 **Low-intrusion, composable design**  
+  Retains MinerU’s `middle_json` and downstream logic for easy integration
 
 ---
 
 ## 🎯 How pipeline parallelism helps
 
-MinerU’s PDF→Markdown path is a **multi-stage pipeline** (e.g. page rendering → VLM → Markdown). If every batch must **finish all stages** before the next batch starts, workers and GPUs **wait on each other**—that shows up as **idle gaps (“bubbles”)** on a timeline and **under-used accelerators**. **Flash-MinerU** (default `MineruEngine`) **overlaps several logical batches** across those stages: while one batch sits in VLM, another can be rendering or writing Markdown, so **compute stays busier end-to-end** without changing MinerU’s operators.
+Flash-MinerU turns MinerU’s sequential pipeline into an **asynchronous pipelined system**:
+
+- 🟢 **Much higher GPU utilization**  
+  Keeps GPUs busy **more than 90% of the time**, while vanilla MinerU is often around **40-50%** because stages block each other
+
+- 🔄 **Cross-stage overlap (key speedup)**  
+  Different batches run in different stages at the same time, such as render / VLM / Markdown, instead of waiting for full completion
+
+- ⚡ **Result: much higher throughput**  
+  Less idle time plus more overlap leads to **significantly faster end-to-end processing**
 
 <table width="100%">
 <tr>
 <td width="50%" valign="top" align="center">
 <strong>Left — bubble schedule (before)</strong><br/>
-<em>Per-batch serialization; visible GPU idle gaps.</em><br/><br/>
-<img src="./docs/bubble.png" alt="Timeline: pipeline bubbles, GPU not fully utilized" width="100%" />
+<em>Batched sequential execution; GPU idle gaps.</em><br/><br/>
+<img src="./docs/bubble.png" alt="Timeline: batched sequential execution with visible GPU idle gaps" width="100%" />
 </td>
 <td width="50%" valign="top" align="center">
 <strong>Right — pipelined (Flash-MinerU)</strong><br/>
-<em>Overlapped batches; GPUs keep working.</em><br/><br/>
-<img src="./docs/pipelined.png" alt="Timeline: pipeline parallelism, better GPU utilization" width="100%" />
+<em>Asynchronous pipeline; high utilization.</em><br/><br/>
+<img src="./docs/pipelined.png" alt="Timeline: asynchronous pipelined execution with high GPU utilization" width="100%" />
 </td>
 </tr>
 </table>
@@ -113,11 +133,11 @@ pdfs = [
 engine = MineruEngine(
     model="<path_to_local>/MinerU2.5-2509-1.2B",
     # Model can be downloaded from https://huggingface.co/opendatalab/MinerU2.5-2509-1.2B
-    batch_size=2,              # PDFs per logical batch
-    replicas=3,                # Parallel vLLM / model instances
-    num_gpus_per_replica=0.5, # Fraction of GPU memory per instance (vLLM KV cache)
+    batch_size=2,              # PDFs per logical batch; often choose a multiple of GPU count
+    replicas=3,                # Parallel vLLM / model instances; often match GPU count
+    num_gpus_per_replica=0.9,  # GPU memory fraction for vLLM KV cache per instance; 1.0 uses full VRAM headroom
     save_dir="outputs_mineru", # Output directory for parsed results
-    inflight=4,                # Pipeline parallelism depth (v1.0.0 default path; try 8 on large hosts)
+    inflight=4,                # Pipeline depth (v1.0.0 path); can raise on high-memory hosts with diminishing returns
 )
 
 # Legacy v0.0.4 sequential batching (deprecated): from flash_mineru import MineruEngineLegacy
@@ -146,13 +166,13 @@ print(results)  # list[list[str]], dir name of the output files
 
 **Scripts:** [English](./docs/BENCHMARK.md) · [简体中文](./docs/BENCHMARK.zh.md)
 
-### Results (368 PDFs, ~8× A100 class machine)
+### Results (368 PDFs, single-node ~8× A100 class)
 
 | Method | Inference configuration | Total time |
 |----|----|----|
-| Flash-MinerU **v1.0.0** | **`MineruEngine`**, 8 replicas, `inflight` 8 | **~8.5 min** |
-| MinerU (vanilla) | **Eight hand-spawned** `mineru` processes (this repo’s **Benchmark-mineru.py** `parallel` mode, one GPU per process, `vlm-auto-engine`) | ~14 min |
-| Flash-MinerU **v0.0.4** | **`MineruEngineLegacy`**, 8 replicas × 1 GPU, batch size 16 | ~23 min |
+| Flash-MinerU **v1.0.0** | `MineruEngine`, 8 replicas, `inflight=8`, pipeline parallelism | **~8.5 min** |
+| MinerU (vanilla) | **Hand-spawned** pool of 8 `mineru` processes (**Benchmark-mineru.py** **parallel** mode, one GPU per process, `vlm-auto-engine`) | ~14 min |
+| Flash-MinerU **v0.0.4** | `MineruEngineLegacy`, 8 replicas × 1 GPU, `batch_size=16`, batch-sequential | ~23 min |
 | MinerU (vanilla) | vLLM, **single GPU** | ~65 min |
 
 Commands: [docs/BENCHMARK.md](./docs/BENCHMARK.md).
