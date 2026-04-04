@@ -23,50 +23,70 @@
 
 </div>
 
-> 使用 **Ray** 加速开源 PDF 解析项目 **MinerU** 中的 **VLM 推理 Pipeline**
+> 使用 **Ray** 加速 MinerU 的 **VLM 推理流水线**，把 PDF 解析变成一个**可扩展的数据基础设施组件**
 
-Flash-MinerU 是一个**轻量级、低侵入式**的加速项目，目标是通过 **Ray 的并行 / 分布式能力**，对 **MinerU** 中最耗时的 **VLM（Vision-Language Model）推理阶段**进行并行化加速，从而显著提升 **PDF → Markdown** 的整体处理吞吐能力。
+Flash-MinerU 是 MinerU 的一层**轻量、低侵入**加速层。它不仅提升 VLM 推理速度，更将 PDF 解析升级为一条**高吞吐、可分布式扩展的数据流水线**，成为现代 AI 系统中的重要基础模块。
 
-本项目的定位是 **并行化与工程加速器**，而非重新实现 MinerU 的核心算法，设计目标包括：
+PDF 是最重要的**高质量知识源**之一，例如论文、报告、说明书。将它们转换成 **Markdown / JSON** 这类**结构化、可直接喂给模型的数据**，是以下场景的基础步骤：
+
+- 📊 **数据治理与数据整理**
+- 🧪 **合成数据生成流水线**
+- 🧠 **LLM / MLLM 训练与评测**
+
+Flash-MinerU 的目标，就是让这一阶段**可扩展、高效率、可用于生产**：
 
 - **依赖少、安装轻量**
-  - 可`pip install flash-mineru`一键安装+运行
-  - 已在 **METAX 等国产算力环境**中完成测试，
-- **最大程度复用 MinerU 的原有逻辑与数据结构**
-  - 保持原算法行为与结果一致性
-- **多卡 / 多进程 / 多集群友好**
-  - 面向大规模 PDF 批量处理场景设计，轻松scale up!
+  - 一行命令即可安装：`pip install flash-mineru`
+  - 可运行在受限环境或国产算力环境（如 METAX）
+- **做系统级加速，而不是重写算法**
+  - 完整复用 MinerU 原有逻辑与数据结构
+  - 保持输出结果一致
+- **面向规模化设计**
+  - 支持多卡 / 多进程 / 多节点扩展
+  - 基于 **Ray** 作为统一执行层
 
 ---
 
 ## ✨ Features
 
-- 🚀 **Ray 并行推理**  
-  将 PDF 页面 / 图片按 batch 切片，分发至多个 Ray actor 并行执行
+- 🚀 **Ray 驱动的分布式执行**  
+  将 PDF 解析变成一条**可扩展的数据流水线**，既支持单机多卡，也可扩展到集群
 
-- 🧠 **VLM 推理加速**  
-  聚焦 MinerU 中的 VLM 推理阶段，当前默认支持基于 **vLLM** 的高吞吐推理
+- 🧠 **高吞吐 VLM 推理**  
+  聚焦最核心的瓶颈阶段，当前默认基于 **vLLM**
 
-- 🧩 **低侵入式设计**  
-  保留 MinerU 原有的中间结构（middle_json）与 Markdown 生成逻辑
+- 🔄 **流水线并行执行（核心改进）**  
+  通过跨阶段重叠的异步流水线，持续维持较高利用率
+
+- 🧩 **低侵入、可组合的设计**  
+  保留 MinerU 的 `middle_json` 与下游逻辑，方便集成进现有系统
 
 ---
 
-## 🎯 优化原理（流水线并行）
+## 🎯 流水线并行如何提速
 
-MinerU 的 PDF→Markdown 是一条 **多阶段流水线**（如渲染页面 → VLM → 写 Markdown）。若每个 batch 必须 **整条链路跑完** 才进入下一批，各阶段会 **互相等待**，时间线上出现 **空泡**，GPU **吃不满**。**Flash-MinerU** 默认的 **`MineruEngine`** 让 **多个逻辑 batch 在阶段之间重叠**：一批在做 VLM 时，另一批可在 pdf2img 或 md 阶段推进，从 **端到端** 提高 **有效算力占用**，且不改变 MinerU 各算子语义。
+Flash-MinerU 将 MinerU 原本顺序执行的流水线，改造成一套**异步流水线系统**：
+
+- 🟢 **GPU 利用率显著更高**  
+  GPU 可在 **90% 以上时间保持忙碌**；而原版 MinerU 常因阶段阻塞而只有 **40%-50%** 左右
+
+- 🔄 **跨阶段重叠（核心提速点）**  
+  不同 batch 会同时处在不同阶段，例如 render / VLM / Markdown，而不是等上一批整条链路跑完
+
+- ⚡ **结果就是整体吞吐大幅提升**  
+  更少空闲时间，加上更多阶段重叠，最终带来**显著更快的端到端处理速度**
 
 <table width="100%">
 <tr>
 <td width="50%" valign="top" align="center">
 <strong>左 — 空泡（优化前）</strong><br/>
-<em>按 batch 串完再下一批，GPU 有明显等待。</em><br/><br/>
-<img src="./docs/bubble.png" alt="时序图：流水线空泡，GPU 未吃满" width="100%" />
+<em>分批串行执行；GPU 存在明显空闲。</em><br/><br/>
+<img src="./docs/bubble.png" alt="时序图：分批串行执行，GPU 有明显空闲" width="100%" />
 </td>
 <td width="50%" valign="top" align="center">
 <strong>右 — 流水线并行（Flash-MinerU）</strong><br/>
-<em>多 batch 重叠，GPU 持续有活干。</em><br/><br/>
-<img src="./docs/pipelined.png" alt="时序图：流水线并行，GPU 利用率更好" width="100%" />
+<em>异步流水线；整体利用率更高。</em><br/><br/>
+<img src="./docs/pipelined.png" alt="时序图：异步流水线执行，GPU 利用率更高" width="100%" />
 </td>
 </tr>
 </table>
@@ -81,7 +101,7 @@ MinerU 的 PDF→Markdown 是一条 **多阶段流水线**（如渲染页面 →
 
 ```bash
 pip install flash-mineru
-````
+```
 
 ### 安装并启用 vLLM 后端（可选）
 
@@ -110,11 +130,11 @@ pdfs = [
 engine = MineruEngine(
     model="<path_to_local>/MinerU2.5-2509-1.2B",
     # 模型可从 https://huggingface.co/opendatalab/MinerU2.5-2509-1.2B 下载
-    batch_size=2,              # 每个逻辑 batch 内 PDF 数
-    replicas=3,                # 并行 vLLM / 模型实例数
-    num_gpus_per_replica=0.5, # 每个实例占用的 GPU 显存比例（vLLM KV cache）
+    batch_size=2,              # 每个逻辑 batch 内 PDF 数，建议为GPU数量的整数倍
+    replicas=3,                # 并行 vLLM / 模型实例数，建议等于GPU数量
+    num_gpus_per_replica=0.9, # 每个实例占用的 GPU 显存比例（vLLM KV cache），1就是吃满当前显存
     save_dir="outputs_mineru", # 解析结果保存路径
-    inflight=4,                # 流水线并行深度（v1.0.0 默认路径；大机器可试 8）
+    inflight=4,                # 流水线并行深度（v1.0.0 默认路径；内存大的机器可以调大，但边际效应显著）
 )
 
 # 旧版 v0.0.4 顺序 batch API（弃用）：from flash_mineru import MineruEngineLegacy
@@ -147,9 +167,9 @@ print(results)  # list[list[str]], 输出文件夹的名称
 
 | 方案 | 推理配置 | 总耗时 |
 |----|----|----|
-| Flash-MinerU **v1.0.0** | `MineruEngine`，8 replica，`inflight=8` | **~8.5 min** |
-| MinerU（原生） | **手动** 8 个 `mineru` 进程（Benchmark 脚本 **parallel** 模式，每进程一卡，`vlm-auto-engine`） | ~14 min |
-| Flash-MinerU **v0.0.4** | `MineruEngineLegacy`，8 replica × 1 GPU，`batch_size=16` | ~23 min |
+| Flash-MinerU **v1.0.0** | `MineruEngine`，8 replica，`inflight=8`，流水线并行 | **~8.5 min** |
+| MinerU（原生） | **手动** 8 个 `mineru` 进程池（Benchmark 脚本 **parallel** 模式，每进程一卡，`vlm-auto-engine`） | ~14 min |
+| Flash-MinerU **v0.0.4** | `MineruEngineLegacy`，8 replica × 1 GPU，`batch_size=16`，batch化串行 | ~23 min |
 | MinerU（原生） | vLLM，**单卡** | ~65 min |
 
 命令见 [docs/BENCHMARK.zh.md](./docs/BENCHMARK.zh.md)。
