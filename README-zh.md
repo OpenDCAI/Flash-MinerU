@@ -130,8 +130,8 @@ pdfs = [
 engine = MineruEngine(
     model="<path_to_local>/MinerU2.5-2509-1.2B",
     # 模型可从 https://huggingface.co/opendatalab/MinerU2.5-2509-1.2B 下载
-    batch_size=2,              # 每个逻辑 batch 内 PDF 数，建议为GPU数量的整数倍
-    replicas=3,                # 并行 vLLM / 模型实例数，建议等于GPU数量
+    batch_size=16,             # 每个逻辑 batch 内 PDF 数，建议为GPU数量的整数倍
+    replicas=8,                # 并行 vLLM / 模型实例数，建议等于GPU数量
     num_gpus_per_replica=0.9, # 每个实例占用的 GPU 显存比例（vLLM KV cache），1就是吃满当前显存
     save_dir="outputs_mineru", # 解析结果保存路径
     inflight=4,                # 流水线并行深度（v1.0.0 默认路径；内存大的机器可以调大，但边际效应显著）

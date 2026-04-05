@@ -133,8 +133,8 @@ pdfs = [
 engine = MineruEngine(
     model="<path_to_local>/MinerU2.5-2509-1.2B",
     # Model can be downloaded from https://huggingface.co/opendatalab/MinerU2.5-2509-1.2B
-    batch_size=2,              # PDFs per logical batch; often choose a multiple of GPU count
-    replicas=3,                # Parallel vLLM / model instances; often match GPU count
+    batch_size=16,             # PDFs per logical batch; often choose a multiple of GPU count
+    replicas=8,                # Parallel vLLM / model instances; often match GPU count
     num_gpus_per_replica=0.9,  # GPU memory fraction for vLLM KV cache per instance; 1.0 uses full VRAM headroom
     save_dir="outputs_mineru", # Output directory for parsed results
     inflight=4,                # Pipeline depth (v1.0.0 path); can raise on high-memory hosts with diminishing returns
