@@ -3,7 +3,7 @@ torch
 
 transformers>=4.57.3,<5.0.0 # mineru2.5 dependency
 
-numpy>=1.26,<2.0
+numpy
 opencv-python-headless # No GUI and visualization needed
 pypdfium2
 mineru_vl_utils
