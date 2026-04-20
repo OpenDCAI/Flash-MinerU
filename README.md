@@ -230,12 +230,16 @@ Commands: [docs/BENCHMARK.md](./docs/BENCHMARK.md).
 
 ---
 
-## 📜 License
+## License
 
-**AGPL-3.0**
+Flash-MinerU is based on and contains modified source code from **MinerU**.
 
-> Notes:
-> The `mineru_core/` directory in this project contains derivative code based on **MinerU (AGPL-3.0)**.
-> In accordance with the AGPL-3.0 license requirements, this repository as a whole is released under **AGPL-3.0** as a derivative work.
-> For details, please refer to the root `LICENSE` file and `mineru_core/README.md`.
+This repository is licensed under the **MinerU Open Source License** (Apache License 2.0 plus additional terms), as provided in [LICENSE](./LICENSE).
 
+In particular, users should pay attention to the following obligations in the MinerU Open Source License:
+- a separate commercial license is required if the applicable MAU or revenue thresholds are exceeded; and
+- if you provide online services based on this project to third parties, you must clearly indicate that MinerU is used.
+
+The full text of Apache License 2.0 is included in [`licenses/APACHE-2.0.txt`](./licenses/APACHE-2.0.txt) for reference.
+
+Third-party dependencies remain under their respective licenses.
