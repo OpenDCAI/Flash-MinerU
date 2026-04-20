@@ -1,0 +1,18 @@
+Flash-MinerU
+Copyright (c) 2026 Xiaochen Ma
+
+This project is a performance-oriented fork of MinerU.
+
+Flash-MinerU contains code derived from MinerU and modifications made by Xiaochen Ma and contributors, including but not limited to:
+- Ray-based task orchestration / parallelization
+- Inference pipeline optimization
+- Engineering changes for higher throughput and lower latency
+
+Original project:
+MinerU
+Copyright (c) 2026 MinerU Team
+
+This repository is distributed under the MinerU Open Source License.
+See the LICENSE file for details.
+
+Additional third-party components are subject to their own respective licenses.

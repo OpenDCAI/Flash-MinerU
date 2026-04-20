@@ -226,13 +226,16 @@ print(results)  # list[list[str]], 输出文件夹的名称
 
 ---
 
-## 📜 License
+## 许可证
 
-**AGPL-3.0**
+Flash-MinerU 基于 **MinerU** 开发，并包含经修改后的 MinerU 源代码。
 
-> 说明：
-> 本项目的 `mineru_core/` 目录中包含基于 **MinerU（AGPL-3.0）** 项目的衍生代码。
-> 根据 AGPL-3.0 的要求，作为衍生作品，本仓库整体以 **AGPL-3.0** 协议开源发布。
-> 详情请参见根目录 `LICENSE` 文件及 `mineru_core/README.md`。
+本仓库依据 **MinerU Open Source License**（即 Apache License 2.0 加附加条款）进行许可，具体内容见 [LICENSE](./LICENSE)。
 
+特别地，使用者应注意 MinerU Open Source License 中的以下义务：
+- 当适用的月活跃用户数（MAU）或收入达到相应门槛时，需要另行取得商业许可；以及
+- 如果您基于本项目向第三方提供在线服务，您必须清晰标明其中使用了 MinerU。
 
+为便于参考，Apache License 2.0 的全文收录于 [`licenses/APACHE-2.0.txt`](./licenses/APACHE-2.0.txt)。
+
+第三方依赖仍分别适用其各自的许可证。
