@@ -1,21 +1,19 @@
 [build-system]
-requires = ["setuptools>=42", "wheel"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "flash-mineru"
 description = "Fast Inference Architecture for MinerU"
 readme = {file = "README.md", content-type = "text/markdown"}
-requires-python = ">=3.10, <4"
-license = {text = "Apache-2.0"}
+requires-python = ">=3.11, <4"
+license = "Apache-2.0"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
-    "License :: Free For Educational Use",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3 :: Only",
@@ -33,8 +31,9 @@ Github = "https://github.com/OpenDCAI/Flash-MinerU"
 
 [tool.setuptools]
 include-package-data = true
-packages = ["flash_mineru"]  # 显式指定主包
 
+[tool.setuptools.packages.find]
+include = ["flash_mineru*"]
 
 [tool.setuptools.dynamic]
 version = {attr = "flash_mineru.version.__version__"}

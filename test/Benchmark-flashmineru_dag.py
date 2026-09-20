@@ -4,7 +4,7 @@ Benchmark Flash-MinerU default :class:`flash_mineru.MineruEngine` (v1.0.0 pipeli
 
 Default PDFs: ``test/sample_pdfs``. Same discovery, caps, reporting, and ``profile.json`` timeline as
 ``Benchmark-flashmineru.py``. Uses the same public API as ``from flash_mineru import MineruEngine``
-(RayOrch ``DagExecutor`` + overlapped batches under ``flash_mineru.ray_utils.rayorch_runtime``).
+(installed RayOrch package with overlapped input batches).
 
 Example
 -------
@@ -100,8 +100,7 @@ def parse_args() -> argparse.Namespace:
         default=4,
         metavar="N",
         help=(
-            "Single cap: DagExecutor max overlapped batches and max_inflight on pdf2img / "
-            "process_img / img2md stages"
+            "Maximum input batches concurrently admitted to RayOrch"
         ),
     )
     p.add_argument(
@@ -162,7 +161,7 @@ def main() -> int:
     except ImportError as e:
         log(f"ERROR: MineruEngine import failed: {e}")
         log(
-            "Check that flash_mineru.ray_utils.rayorch_runtime is present and dependencies (ray, torch) are installed."
+            "Check that rayorch==0.1.0 and the Flash-MinerU dependencies are installed."
         )
         return 2
 
