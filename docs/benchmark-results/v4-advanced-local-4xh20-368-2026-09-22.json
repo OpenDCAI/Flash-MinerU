@@ -1,0 +1,153 @@
+{
+  "date": "2026-09-22",
+  "pipeline": "v4-advanced-local",
+  "purpose": "Compare four complete local MinerU 4 Advanced model stacks with the equivalent four-actor RayOrch topology.",
+  "implementation": {
+    "repository": "OpenDCAI/Flash-MinerU",
+    "base_commit": "1b62bc7e9f3e5c9489943483e0090661883d10f5",
+    "worktree_dirty_during_validation": true,
+    "flash_mineru": "1.0.1 wheel",
+    "rayorch": "0.1.0",
+    "rayorch_source": "PyPI wheel"
+  },
+  "hardware": {
+    "host_gpu_count": 4,
+    "gpu_model": "NVIDIA H20",
+    "driver_version": "535.247.01",
+    "cuda_version": "12.9"
+  },
+  "software": {
+    "python": "3.12.11",
+    "mineru": "4.0.5",
+    "mineru-vl-utils": "2.0.5",
+    "ray": "2.50.0",
+    "torch": "2.7.1",
+    "vllm": "0.10.1.1"
+  },
+  "corpus": {
+    "pdfs": 368,
+    "pages": 7072,
+    "bytes": 1101539712,
+    "sha256": "184cf525589ace8a192e52cb8a1b671a8144d9d9f0bad23191de6be7dd8d7298"
+  },
+  "topology": {
+    "native": "4 independent processes, each owning one H20 and one complete Layout + local Two-Step vLLM + MFR + OCR stack",
+    "flash": "4 RayOrch Analyze actors, each owning one H20 and the same complete resident model stack; CPU render and document assembly are separate actor stages",
+    "dag": "split PDF -> render ordered window -> analyze window with complete local stack -> assemble document",
+    "two_step_policy": "The two VLM steps remain inside one Analyze UDF because they share one resident model and have a direct dependency."
+  },
+  "configuration": {
+    "gpus": 4,
+    "parse_mode": "auto",
+    "image_analysis": true,
+    "small_backend": "torch",
+    "vlm_engine": "vllm",
+    "gpu_memory_utilization": 0.1,
+    "native_worker_batch_size": 16,
+    "native_shard_pages": [
+      1768,
+      1768,
+      1768,
+      1768
+    ],
+    "flash_batch_size": 16,
+    "flash_input_batch_size": 16,
+    "flash_max_active_input_batches": 3,
+    "flash_analyze_batch_size": 8,
+    "window_size": 8,
+    "layout_batch_size": 8
+  },
+  "native": {
+    "end_to_end_seconds": 1942.4434599522501,
+    "pdf_per_second": 0.1894521037997401,
+    "page_per_second": 3.640775212151527,
+    "successful_documents": 368,
+    "successful_pages": 7072,
+    "worker_exit_codes": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0
+    },
+    "mean_gpu_utilization_percent": [
+      28.602,
+      27.813,
+      27.739,
+      26.898
+    ],
+    "peak_memory_used_mib": [
+      14112.0,
+      14118.0,
+      14120.0,
+      14122.0
+    ]
+  },
+  "flash": {
+    "startup_seconds": 9.956876197829843,
+    "execution_seconds": 1350.2523185890168,
+    "end_to_end_seconds": 1363.5293271001428,
+    "pdf_per_second_during_execution": 0.2725416538329308,
+    "page_per_second_during_execution": 5.23753960844154,
+    "successful_documents": 368,
+    "successful_pages": 7072,
+    "result_batches": 23,
+    "mean_gpu_utilization_percent": [
+      28.908,
+      28.688,
+      27.752,
+      29.498
+    ],
+    "peak_memory_used_mib": [
+      15540.0,
+      15538.0,
+      14928.0,
+      15362.0
+    ],
+    "stage_profile": {
+      "kind": "cumulative_actor_stage_wall_time",
+      "seconds": {
+        "render": 297.450032,
+        "layout": 176.338258,
+        "vlm": 2009.705233,
+        "mfr": 549.69949,
+        "ocr": 2333.987671,
+        "assemble": 83.009659
+      },
+      "note": "Stage values are cumulative across concurrently running actors and therefore must not be summed as end-to-end wall time."
+    }
+  },
+  "speedup": {
+    "native_end_to_end_over_flash_execution": 1.4385781332944199,
+    "native_end_to_end_over_flash_end_to_end": 1.4245703567544827,
+    "end_to_end_seconds_saved": 578.9141328521073
+  },
+  "output_comparison": {
+    "documents_compared": 368,
+    "comparable_documents": 368,
+    "valid_documents": 368,
+    "exact_markdown_documents": 39,
+    "page_count_mismatches": 0,
+    "block_count_differences": 55,
+    "documents_with_errors": 0,
+    "token_jaccard": {
+      "min": 0.957378223495702,
+      "p05": 0.9750436257481612,
+      "median": 0.9972259509774424,
+      "mean": 0.9939669044474855,
+      "max": 1.0
+    },
+    "token_multiset_f1": {
+      "min": 0.9327849534416229,
+      "p05": 0.9614907253894903,
+      "median": 0.9970919784348963,
+      "mean": 0.9911082436281704,
+      "max": 1.0
+    },
+    "notes": "Both runs produced every document and page. Local VLM decoding is not bitwise deterministic across process and batching layouts, so semantic token metrics and structural counts are reported instead of requiring byte-identical Markdown."
+  },
+  "artifacts": {
+    "native_report": "/tmp/flash-mineru-advanced-local-368-20260922/native/native.json",
+    "flash_report": "/tmp/flash-mineru-advanced-local-368-20260922/flash/flash.json",
+    "comparison_report": "/tmp/flash-mineru-advanced-local-368-20260922/compare.json"
+  }
+}

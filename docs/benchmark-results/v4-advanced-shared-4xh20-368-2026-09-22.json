@@ -1,0 +1,214 @@
+{
+  "date": "2026-09-22",
+  "pipeline": "v4-advanced-shared",
+  "purpose": "Validate RayOrch shared actor pools by splitting MinerU 4 Advanced into two logical model Calls while keeping one complete resident model stack per GPU.",
+  "implementation": {
+    "repository": "OpenDCAI/Flash-MinerU",
+    "base_commit": "1b62bc7e9f3e5c9489943483e0090661883d10f5",
+    "worktree_dirty_during_validation": true,
+    "flash_mineru": "1.0.1 editable worktree",
+    "rayorch": "0.1.0",
+    "rayorch_source": "editable local worktree",
+    "rayorch_commit": "e4746b2"
+  },
+  "hardware": {
+    "host_gpu_count": 4,
+    "gpu_model": "NVIDIA H20",
+    "driver_version": "535.247.01",
+    "cuda_version": "12.9"
+  },
+  "software": {
+    "python": "3.12.11",
+    "mineru": "4.0.5",
+    "mineru-vl-utils": "2.0.5",
+    "ray": "2.50.0",
+    "torch": "2.7.1",
+    "vllm": "0.10.1.1"
+  },
+  "corpus": {
+    "pdfs": 368,
+    "pages": 7072,
+    "bytes": 1101539712,
+    "sha256": "184cf525589ace8a192e52cb8a1b671a8144d9d9f0bad23191de6be7dd8d7298"
+  },
+  "topology": {
+    "native": "4 independent processes, each owning one H20 and one complete Layout + local Two-Step vLLM + MFR + OCR stack",
+    "old_flash_local": "split PDF -> render ordered window -> one monolithic Analyze Call -> assemble document",
+    "shared_flash": "split PDF -> render ordered window -> Infer Call -> Finish Call -> assemble document",
+    "shared_pool": "Infer and Finish are distinct logical Calls with independent lineage and ready queues, but reuse the same four-replica physical RayOrch Actor Pool and the same resident model stacks",
+    "state_policy": "Stable model state remains actor-local; every request-specific value flows through explicit Ports. The compact Infer output carries only Layout/VLM results and timing, while the original rendered record reaches Finish through a second Port."
+  },
+  "configuration": {
+    "gpus": 4,
+    "parse_mode": "auto",
+    "image_analysis": true,
+    "small_backend": "torch",
+    "vlm_engine": "vllm",
+    "gpu_memory_utilization": 0.1,
+    "native_worker_batch_size": 16,
+    "flash_batch_size": 16,
+    "flash_input_batch_size": 16,
+    "flash_max_active_input_batches": 3,
+    "shared_call_batch_size": 16,
+    "window_size": 8,
+    "layout_batch_size": 8
+  },
+  "native": {
+    "end_to_end_seconds": 1942.4434599522501,
+    "pdf_per_second": 0.1894521037997401,
+    "page_per_second": 3.640775212151527,
+    "successful_documents": 368,
+    "successful_pages": 7072
+  },
+  "old_flash_local": {
+    "startup_seconds": 9.956876197829843,
+    "execution_seconds": 1350.2523185890168,
+    "end_to_end_seconds": 1363.5293271001428,
+    "page_per_second_during_execution": 5.23753960844154
+  },
+  "shared_flash": {
+    "startup_seconds": 10.56764687038958,
+    "execution_seconds": 1234.5964967086911,
+    "end_to_end_seconds": 1248.5180778410286,
+    "pdf_per_second_during_execution": 0.29807309593138376,
+    "page_per_second_during_execution": 5.728187321811809,
+    "successful_documents": 368,
+    "successful_pages": 7072,
+    "result_batches": 23,
+    "mean_gpu_utilization_percent": [
+      24.199,
+      19.052,
+      28.402,
+      29.232
+    ],
+    "peak_memory_used_mib": [
+      15540.0,
+      15522.0,
+      15622.0,
+      16296.0
+    ],
+    "stage_profile": {
+      "kind": "cumulative_actor_stage_wall_time",
+      "seconds": {
+        "render": 292.548,
+        "layout": 181.168,
+        "vlm": 1587.499,
+        "mfr": 518.219,
+        "ocr": 2257.481,
+        "assemble": 81.799
+      },
+      "note": "Stage values are cumulative across concurrently running actors and therefore must not be summed as end-to-end wall time."
+    }
+  },
+  "speedup": {
+    "native_end_to_end_over_shared_execution": 1.5733427602707502,
+    "native_end_to_end_over_shared_end_to_end": 1.555799226640896,
+    "old_flash_local_execution_over_shared_execution": 1.0936790458977101,
+    "old_flash_local_end_to_end_over_shared_end_to_end": 1.092118209019444,
+    "execution_seconds_saved_vs_old_flash_local": 115.65582188032568,
+    "end_to_end_seconds_saved_vs_native": 693.9253821112216
+  },
+  "output_comparison_vs_native": {
+    "documents_compared": 368,
+    "comparable_documents": 368,
+    "valid_documents": 368,
+    "exact_markdown_documents": 42,
+    "page_count_mismatches": 0,
+    "block_count_differences": 54,
+    "documents_with_errors": 0,
+    "token_jaccard": {
+      "min": 0.9614965492190338,
+      "p05": 0.9774007565161539,
+      "median": 0.9979140592407175,
+      "mean": 0.9944773304378707,
+      "max": 1.0
+    },
+    "token_multiset_f1": {
+      "min": 0.9067557048629604,
+      "p05": 0.9619897498915985,
+      "median": 0.9970919784348963,
+      "mean": 0.9905968688268395,
+      "max": 1.0
+    }
+  },
+  "output_comparison_vs_old_flash_local": {
+    "documents_compared": 368,
+    "comparable_documents": 368,
+    "valid_documents": 368,
+    "exact_markdown_documents": 49,
+    "page_count_mismatches": 0,
+    "block_count_differences": 55,
+    "documents_with_errors": 0,
+    "token_jaccard": {
+      "min": 0.9542857142857143,
+      "p05": 0.9749382295489902,
+      "median": 0.9976851851851852,
+      "mean": 0.9943214661979631,
+      "max": 1.0
+    },
+    "token_multiset_f1": {
+      "min": 0.9067557048629604,
+      "p05": 0.9627668284296366,
+      "median": 0.9972552607502287,
+      "mean": 0.9908471009208525,
+      "max": 1.0
+    }
+  },
+  "batch_ablation": {
+    "purpose": "Test whether a larger shared-Call batch better fills the local vLLM KV-cache headroom.",
+    "fixed_configuration": {
+      "gpus": 4,
+      "gpu_memory_utilization": 0.1,
+      "input_batch_size": 16,
+      "max_active_input_batches": 3,
+      "window_size": 8,
+      "layout_batch_size": 8
+    },
+    "runs_48_pdf": [
+      {
+        "shared_call_batch_size": 16,
+        "execution_seconds": 244.56934629194438,
+        "end_to_end_seconds": 259.5772644970566,
+        "page_per_second": 4.056109300042213,
+        "peak_memory_used_mib": 15510.0
+      },
+      {
+        "shared_call_batch_size": 32,
+        "execution_seconds": 226.3382063563913,
+        "end_to_end_seconds": 239.68899827823043,
+        "page_per_second": 4.382821689582538,
+        "peak_memory_used_mib": 15512.0
+      },
+      {
+        "shared_call_batch_size": 64,
+        "execution_seconds": 363.83865927532315,
+        "end_to_end_seconds": 377.2390973251313,
+        "page_per_second": 2.7264832219199007,
+        "peak_memory_used_mib": 15512.0
+      }
+    ],
+    "runs_368_pdf": [
+      {
+        "shared_call_batch_size": 16,
+        "execution_seconds": 1234.5964967086911,
+        "end_to_end_seconds": 1248.5180778410286,
+        "page_per_second": 5.728187321811809
+      },
+      {
+        "shared_call_batch_size": 32,
+        "execution_seconds": 1372.6180740743876,
+        "end_to_end_seconds": 1386.5019395854324,
+        "page_per_second": 5.152197930053441
+      }
+    ],
+    "conclusion": "On the 48-PDF subset, batch 32 increased throughput by 8.05% and reduced execution time by 7.45% versus batch 16, but was 11.18% slower on the complete 368-PDF corpus. Batch 64 was 48.77% slower than batch 16 on 48 PDFs. Peak memory stayed near 15.5-16.0 GiB, so the regression is not a KV-cache capacity problem; oversized Finish calls increase MFR/OCR work quanta and shared-pool head-of-line blocking. Keep 16 as the production default."
+  },
+  "artifacts": {
+    "native_report": "/tmp/flash-mineru-advanced-local-368-20260922/native/native.json",
+    "old_flash_local_report": "/tmp/flash-mineru-advanced-local-368-20260922/flash/flash.json",
+    "shared_batch_16_report": "/tmp/flash-mineru-advanced-shared-368-20260922/flash.json",
+    "shared_batch_32_report": "/tmp/flash-mineru-advanced-shared-bs32-368-20260922/flash.json",
+    "comparison_vs_native": "/tmp/flash-mineru-advanced-shared-368-20260922/compare-native.json",
+    "comparison_vs_old_flash_local": "/tmp/flash-mineru-advanced-shared-368-20260922/compare-old-local.json"
+  }
+}

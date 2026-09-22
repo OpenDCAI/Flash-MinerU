@@ -34,3 +34,4 @@ sample_pdfs/
 copy_pdfs.py
 
 benchmark_outputs/
+experiments/

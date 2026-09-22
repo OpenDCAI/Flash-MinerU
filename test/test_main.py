@@ -1,28 +1,49 @@
+"""Manual smoke test.
+
+Run with a real model and GPU:
+
+    FLASH_MINERU_MODEL=/path/to/MinerU2.5-2509-1.2B \
+      python test/test_main.py
+
+Keeping execution behind ``main`` makes normal test discovery side-effect
+free: importing this module never starts Ray or loads a model.
+"""
+
+from __future__ import annotations
+
+import os
+import time
+from pathlib import Path
+
 from flash_mineru import MineruEngine
-import os, time
 
-start_time = time.perf_counter()
 
-engine = MineruEngine(
-    model="<path_to_local>/MinerU2.5-2509-1.2B",
-    # Model: https://huggingface.co/opendatalab/MinerU2.5-2509-1.2B
-    batch_size=2,  # PDFs per logical batch; often choose a multiple of GPU count
-    replicas=3,  # Parallel vLLM / model instances; often match GPU count
-    num_gpus_per_replica=0.9,  # GPU memory fraction for vLLM KV cache per instance; 1.0 uses full VRAM headroom
-    save_dir="outputs_mineru",
-    inflight=4,  # Pipeline depth (v1.0.0 path); can raise on high-memory hosts with diminishing returns
-)
-data = []
-data_dir = "test/sample_pdfs"
+def main() -> None:
+    model = os.environ.get("FLASH_MINERU_MODEL")
+    if not model:
+        raise SystemExit("set FLASH_MINERU_MODEL to a local MinerU 2.5 model")
 
-for file in os.listdir(data_dir):
-    data.append(os.path.join(data_dir, file))
-    
-results = engine.run(data)
+    data_dir = Path("test/sample_pdfs")
+    pdfs = sorted(str(path) for path in data_dir.glob("*.pdf"))
+    if not pdfs:
+        raise SystemExit(f"no PDFs found under {data_dir}")
 
-print("Final Result:")
-# results is a list of list
-print(results)
+    start_time = time.perf_counter()
+    with MineruEngine(
+        pipeline_version="v2.5",
+        model=model,
+        batch_size=2,
+        replicas=3,
+        num_gpus_per_replica=0.9,
+        save_dir="outputs_mineru",
+        inflight=4,
+    ) as engine:
+        results = engine.run(pdfs)
 
-end_time = time.perf_counter()
-print(f"Total time taken: {end_time - start_time} seconds")
+    print("Final Result:")
+    print(results)
+    print(f"Total time taken: {time.perf_counter() - start_time} seconds")
+
+
+if __name__ == "__main__":
+    main()

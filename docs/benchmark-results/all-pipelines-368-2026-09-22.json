@@ -1,0 +1,591 @@
+{
+  "purpose": "Native MinerU versus Flash-MinerU performance and end-to-end output validation for every registered pipeline.",
+  "implementation": {
+    "repository": "OpenDCAI/Flash-MinerU",
+    "base_commit": "1b62bc7e9f3e5c9489943483e0090661883d10f5",
+    "worktree_dirty_during_validation": true,
+    "rayorch": "0.1.0",
+    "rayorch_source": "PyPI for the original eight rows; editable commit e4746b2 for v4-advanced-shared"
+  },
+  "hardware": {
+    "host_gpu_count": 4,
+    "gpu_model": "NVIDIA H20",
+    "driver_version": "535.247.01",
+    "cuda_version": "12.9"
+  },
+  "corpus": {
+    "pdfs": 368,
+    "pages": 7072,
+    "bytes": 1101539712,
+    "sha256": "184cf525589ace8a192e52cb8a1b671a8144d9d9f0bad23191de6be7dd8d7298"
+  },
+  "timing_policy": {
+    "native": "wall time of the complete native runner; model initialization is amortized inside each worker",
+    "flash_execution": "Executor.run only, after Ray actors and models are ready",
+    "flash_end_to_end": "Ray startup, actor/model initialization, execution, and cleanup",
+    "external_vlm_server": "server startup excluded from both native and Flash timings for v4-standard and v4-advanced"
+  },
+  "v4_basic_cross_window_batching": {
+    "before_flash_execution_seconds": 1736.7418111860752,
+    "after_flash_execution_seconds": 1550.470371549949,
+    "before_speedup_native_over_flash_execution": 0.9455138937266984,
+    "after_speedup_native_over_flash_execution": 1.0591066700945357,
+    "flash_execution_improvement": 1.1201386644040914,
+    "execution_time_reduction_fraction": 0.10725338587254696,
+    "note": "The public split -> analyze -> assemble DAG is unchanged. The Analyze actor flattens ready windows by parse mode, runs MinerU formula/table/OCR stages once over the combined pages, then restores window ownership and order."
+  },
+  "pipelines": [
+    {
+      "name": "v2.5",
+      "mineru": "3.4.4",
+      "topology": "4 local one-GPU native workers versus 4 RayOrch-managed one-GPU VLM actors",
+      "configuration": {
+        "parse_mode": "auto",
+        "image_analysis": false,
+        "native_workers": 4,
+        "native_worker_batch_size": 16,
+        "native_shard_pages": [
+          1768,
+          1768,
+          1768,
+          1768
+        ],
+        "flash_replicas": 4,
+        "flash_ocr_batch_size": 128,
+        "flash_input_batch_size": 24,
+        "flash_max_active_input_batches": 4
+      },
+      "native_wall_seconds": 1177.0084843952209,
+      "flash_startup_seconds": 44.158590422943234,
+      "flash_execution_seconds": 439.7159175295383,
+      "flash_end_to_end_seconds": 487.25034411251545,
+      "speedup_native_over_flash_execution": 2.676747503269891,
+      "speedup_native_over_flash_end_to_end": 2.4156134492609556,
+      "native_page_per_second": 6.008452864835369,
+      "flash_page_per_second_during_execution": 16.083111204462895,
+      "output_comparison": {
+        "documents_compared": 368,
+        "comparable_documents": 368,
+        "valid_documents": 368,
+        "exact_markdown_documents": 0,
+        "page_count_mismatches": 0,
+        "block_count_differences": 87,
+        "documents_with_errors": 0,
+        "token_jaccard": {
+          "min": 0.9059343434343434,
+          "p05": 0.973985735040757,
+          "median": 0.9939247681612025,
+          "mean": 0.9902032843890438,
+          "max": 1.0
+        },
+        "token_multiset_f1": {
+          "min": 0.7742355808999539,
+          "p05": 0.9883205558621765,
+          "median": 0.9986219568006369,
+          "mean": 0.9931462949914003,
+          "max": 1.0
+        }
+      },
+      "run_date": "2026-09-20",
+      "native_successful_documents": 368,
+      "native_successful_pages": 7072,
+      "flash_successful_documents": 368,
+      "flash_successful_pages": 7072
+    },
+    {
+      "name": "v2.5-pro-2604",
+      "mineru": "3.4.4",
+      "topology": "4 local one-GPU native workers versus 4 RayOrch-managed one-GPU VLM actors",
+      "configuration": {
+        "gpus": 4,
+        "parse_mode": "auto",
+        "image_analysis": true,
+        "small_backend": "torch",
+        "vlm_engine": "vllm",
+        "vlm_server_url": "",
+        "vlm_model": "",
+        "batch_size": 16,
+        "ocr_batch_size": 128,
+        "input_batch_size": 24,
+        "inflight": 4,
+        "window_size": 8,
+        "gpu_memory_utilization": 0.9
+      },
+      "native_wall_seconds": 1449.5748088993132,
+      "flash_startup_seconds": 49.79528626985848,
+      "flash_execution_seconds": 545.722287395969,
+      "flash_end_to_end_seconds": 598.884383706376,
+      "speedup_native_over_flash_execution": 2.6562499688555334,
+      "speedup_native_over_flash_end_to_end": 2.4204585197700164,
+      "native_page_per_second": 4.878671977867696,
+      "flash_page_per_second_during_execution": 12.95897228926743,
+      "output_comparison": {
+        "documents_compared": 368,
+        "comparable_documents": 368,
+        "valid_documents": 368,
+        "exact_markdown_documents": 1,
+        "page_count_mismatches": 0,
+        "block_count_differences": 27,
+        "documents_with_errors": 0,
+        "token_jaccard": {
+          "min": 0.9368029739776952,
+          "p05": 0.9675952717861268,
+          "median": 0.9950798318047474,
+          "mean": 0.9897690704070317,
+          "max": 1.0
+        },
+        "token_multiset_f1": {
+          "min": 0.9362715162555764,
+          "p05": 0.9536835629651779,
+          "median": 0.9942951964753608,
+          "mean": 0.9869386367741153,
+          "max": 1.0
+        }
+      },
+      "run_date": "2026-09-21",
+      "native_successful_documents": 368,
+      "native_successful_pages": 7072,
+      "flash_successful_documents": 368,
+      "flash_successful_pages": 7072
+    },
+    {
+      "name": "v2.5-pro-2605",
+      "mineru": "3.4.4",
+      "topology": "4 local one-GPU native workers versus 4 RayOrch-managed one-GPU VLM actors",
+      "configuration": {
+        "gpus": 4,
+        "parse_mode": "auto",
+        "image_analysis": true,
+        "small_backend": "torch",
+        "vlm_engine": "vllm",
+        "vlm_server_url": "",
+        "vlm_model": "",
+        "batch_size": 16,
+        "ocr_batch_size": 128,
+        "input_batch_size": 24,
+        "inflight": 4,
+        "window_size": 8,
+        "gpu_memory_utilization": 0.9
+      },
+      "native_wall_seconds": 1468.2316845692694,
+      "flash_startup_seconds": 48.49683409370482,
+      "flash_execution_seconds": 553.5805286746472,
+      "flash_end_to_end_seconds": 605.4318737126887,
+      "speedup_native_over_flash_execution": 2.652245894710984,
+      "speedup_native_over_flash_end_to_end": 2.4250980966126465,
+      "native_page_per_second": 4.81667850811617,
+      "flash_page_per_second_during_execution": 12.77501579929374,
+      "output_comparison": {
+        "documents_compared": 368,
+        "comparable_documents": 368,
+        "valid_documents": 368,
+        "exact_markdown_documents": 12,
+        "page_count_mismatches": 0,
+        "block_count_differences": 61,
+        "documents_with_errors": 0,
+        "token_jaccard": {
+          "min": 0.9248768472906403,
+          "p05": 0.9690324374185986,
+          "median": 0.9955887208247145,
+          "mean": 0.9902505811751984,
+          "max": 1.0
+        },
+        "token_multiset_f1": {
+          "min": 0.9468585496687416,
+          "p05": 0.9581197313821055,
+          "median": 0.9967474143742344,
+          "mean": 0.9882985569263631,
+          "max": 1.0
+        }
+      },
+      "run_date": "2026-09-21",
+      "native_successful_documents": 368,
+      "native_successful_pages": 7072,
+      "flash_successful_documents": 368,
+      "flash_successful_pages": 7072
+    },
+    {
+      "name": "v4-flash",
+      "mineru": "4.0.5",
+      "topology": "4 local one-GPU native workers versus 4 RayOrch-managed one-GPU window actors",
+      "configuration": {
+        "gpus": 4,
+        "parse_mode": "auto",
+        "image_analysis": false,
+        "small_backend": "torch",
+        "vlm_engine": "vllm",
+        "vlm_server_url": "",
+        "vlm_model": "",
+        "batch_size": 16,
+        "ocr_batch_size": 128,
+        "input_batch_size": 24,
+        "inflight": 4,
+        "window_size": 8,
+        "gpu_memory_utilization": 0.9
+      },
+      "native_wall_seconds": 1044.6857207976282,
+      "flash_startup_seconds": 4.780877836048603,
+      "flash_execution_seconds": 1157.2836488801986,
+      "flash_end_to_end_seconds": 1165.2856459524482,
+      "speedup_native_over_flash_execution": 0.9027049866370086,
+      "speedup_native_over_flash_end_to_end": 0.8965061265675786,
+      "native_page_per_second": 6.769500012501804,
+      "flash_page_per_second_during_execution": 6.11086141832467,
+      "output_comparison": {
+        "documents_compared": 368,
+        "comparable_documents": 368,
+        "valid_documents": 368,
+        "exact_markdown_documents": 304,
+        "page_count_mismatches": 0,
+        "block_count_differences": 0,
+        "documents_with_errors": 0,
+        "token_jaccard": {
+          "min": 0.9970245474832631,
+          "p05": 0.9983210208193418,
+          "median": 1.0,
+          "mean": 0.9997421689448845,
+          "max": 1.0
+        },
+        "token_multiset_f1": {
+          "min": 0.9994675363572831,
+          "p05": 0.999526026709789,
+          "median": 1.0,
+          "mean": 0.9999229280373683,
+          "max": 1.0
+        }
+      },
+      "run_date": "2026-09-21",
+      "native_successful_documents": 368,
+      "native_successful_pages": 7072,
+      "flash_successful_documents": 368,
+      "flash_successful_pages": 7072
+    },
+    {
+      "name": "v4-basic",
+      "mineru": "4.0.5",
+      "topology": "4 local one-GPU native workers versus 4 RayOrch-managed one-GPU window actors with cross-window local-model batching",
+      "configuration": {
+        "gpus": 4,
+        "parse_mode": "auto",
+        "image_analysis": false,
+        "small_backend": "torch",
+        "vlm_engine": "vllm",
+        "vlm_server_url": "",
+        "vlm_model": "",
+        "batch_size": 16,
+        "ocr_batch_size": 32,
+        "input_batch_size": 24,
+        "inflight": 4,
+        "window_size": 8,
+        "gpu_memory_utilization": 0.9
+      },
+      "native_wall_seconds": 1642.1135122925043,
+      "flash_startup_seconds": 5.843148224055767,
+      "flash_execution_seconds": 1550.470371549949,
+      "flash_end_to_end_seconds": 1559.308429831639,
+      "speedup_native_over_flash_execution": 1.0591066700945357,
+      "speedup_native_over_flash_end_to_end": 1.0531037226995599,
+      "native_page_per_second": 4.3066450321859895,
+      "flash_page_per_second_during_execution": 4.561196479317678,
+      "output_comparison": {
+        "documents_compared": 368,
+        "comparable_documents": 368,
+        "valid_documents": 368,
+        "exact_markdown_documents": 304,
+        "page_count_mismatches": 0,
+        "block_count_differences": 0,
+        "documents_with_errors": 0,
+        "token_jaccard": {
+          "min": 0.9989969909729187,
+          "p05": 0.9993206521739131,
+          "median": 1.0,
+          "mean": 0.9999281155671365,
+          "max": 1.0
+        },
+        "token_multiset_f1": {
+          "min": 0.9994588256516641,
+          "p05": 0.9997887561031128,
+          "median": 1.0,
+          "mean": 0.9999580772205389,
+          "max": 1.0
+        }
+      },
+      "run_date": "2026-09-21",
+      "native_successful_documents": 368,
+      "native_successful_pages": 7072,
+      "flash_successful_documents": 368,
+      "flash_successful_pages": 7072
+    },
+    {
+      "name": "v4-standard",
+      "mineru": "4.0.5",
+      "topology": "3 local-model runner GPUs plus 1 shared HTTP VLM-server GPU on both sides",
+      "configuration": {
+        "gpus": 3,
+        "parse_mode": "auto",
+        "image_analysis": true,
+        "small_backend": "torch",
+        "vlm_engine": "vllm",
+        "vlm_server_url": "http://127.0.0.1:18000/v1",
+        "vlm_model": "MinerU2.5-Pro-2605-1.2B",
+        "batch_size": 16,
+        "ocr_batch_size": 128,
+        "input_batch_size": 24,
+        "inflight": 4,
+        "window_size": 8,
+        "gpu_memory_utilization": 0.9
+      },
+      "native_wall_seconds": 1822.7419707942754,
+      "flash_startup_seconds": 5.325658850371838,
+      "flash_execution_seconds": 1435.380770245567,
+      "flash_end_to_end_seconds": 1443.9337223116308,
+      "speedup_native_over_flash_execution": 1.2698665110878127,
+      "speedup_native_over_flash_end_to_end": 1.2623446233226001,
+      "native_page_per_second": 3.879868962976869,
+      "flash_page_per_second_during_execution": 4.926915663493327,
+      "output_comparison": {
+        "documents_compared": 368,
+        "comparable_documents": 368,
+        "valid_documents": 368,
+        "exact_markdown_documents": 246,
+        "page_count_mismatches": 0,
+        "block_count_differences": 0,
+        "documents_with_errors": 0,
+        "token_jaccard": {
+          "min": 0.9985734664764622,
+          "p05": 0.9996194824961948,
+          "median": 1.0,
+          "mean": 0.9999551040037735,
+          "max": 1.0
+        },
+        "token_multiset_f1": {
+          "min": 0.9950729284792554,
+          "p05": 0.9996799329029614,
+          "median": 1.0,
+          "mean": 0.9999147205439176,
+          "max": 1.0
+        }
+      },
+      "run_date": "2026-09-21",
+      "native_successful_documents": 368,
+      "native_successful_pages": 7072,
+      "flash_successful_documents": 368,
+      "flash_successful_pages": 7072
+    },
+    {
+      "name": "v4-advanced",
+      "mineru": "4.0.5",
+      "topology": "3 local-model runner GPUs plus 1 shared HTTP VLM-server GPU on both sides",
+      "configuration": {
+        "gpus": 3,
+        "parse_mode": "auto",
+        "image_analysis": true,
+        "small_backend": "torch",
+        "vlm_engine": "vllm",
+        "vlm_server_url": "http://127.0.0.1:18000/v1",
+        "vlm_model": "MinerU2.5-Pro-2605-1.2B",
+        "batch_size": 16,
+        "ocr_batch_size": 128,
+        "input_batch_size": 24,
+        "inflight": 4,
+        "window_size": 8,
+        "gpu_memory_utilization": 0.9
+      },
+      "native_wall_seconds": 2559.7891408335418,
+      "flash_startup_seconds": 5.373118951916695,
+      "flash_execution_seconds": 1899.2681348994374,
+      "flash_end_to_end_seconds": 1907.6809695269912,
+      "speedup_native_over_flash_execution": 1.3477765955195566,
+      "speedup_native_over_flash_end_to_end": 1.3418329278968697,
+      "native_page_per_second": 2.762727557199165,
+      "flash_page_per_second_during_execution": 3.7235395413899517,
+      "output_comparison": {
+        "documents_compared": 368,
+        "comparable_documents": 368,
+        "valid_documents": 368,
+        "exact_markdown_documents": 43,
+        "page_count_mismatches": 0,
+        "block_count_differences": 0,
+        "documents_with_errors": 0,
+        "token_jaccard": {
+          "min": 0.9409462824617574,
+          "p05": 0.9721294454617906,
+          "median": 0.9974832839410379,
+          "mean": 0.9934049912291492,
+          "max": 1.0
+        },
+        "token_multiset_f1": {
+          "min": 0.9418581329530007,
+          "p05": 0.9619274500599733,
+          "median": 0.9973419194595466,
+          "mean": 0.990571864212982,
+          "max": 1.0
+        }
+      },
+      "run_date": "2026-09-21",
+      "native_successful_documents": 368,
+      "native_successful_pages": 7072,
+      "flash_successful_documents": 368,
+      "flash_successful_pages": 7072
+    },
+    {
+      "name": "v4-advanced-local",
+      "mineru": "4.0.5",
+      "topology": "4 complete local model stacks on both sides: one independent native process or one RayOrch Analyze actor per H20",
+      "configuration": {
+        "gpus": 4,
+        "parse_mode": "auto",
+        "image_analysis": true,
+        "small_backend": "torch",
+        "vlm_engine": "vllm",
+        "vlm_server_url": "",
+        "vlm_model": "",
+        "batch_size": 16,
+        "ocr_batch_size": 8,
+        "input_batch_size": 16,
+        "inflight": 3,
+        "window_size": 8,
+        "layout_batch_size": 8,
+        "gpu_memory_utilization": 0.1
+      },
+      "native_wall_seconds": 1942.4434599522501,
+      "flash_startup_seconds": 9.956876197829843,
+      "flash_execution_seconds": 1350.2523185890168,
+      "flash_end_to_end_seconds": 1363.5293271001428,
+      "speedup_native_over_flash_execution": 1.4385781332944199,
+      "speedup_native_over_flash_end_to_end": 1.4245703567544827,
+      "native_page_per_second": 3.640775212151527,
+      "flash_page_per_second_during_execution": 5.23753960844154,
+      "output_comparison": {
+        "documents_compared": 368,
+        "comparable_documents": 368,
+        "valid_documents": 368,
+        "exact_markdown_documents": 39,
+        "page_count_mismatches": 0,
+        "block_count_differences": 55,
+        "documents_with_errors": 0,
+        "token_jaccard": {
+          "min": 0.957378223495702,
+          "p05": 0.9750436257481612,
+          "median": 0.9972259509774424,
+          "mean": 0.9939669044474855,
+          "max": 1.0
+        },
+        "token_multiset_f1": {
+          "min": 0.9327849534416229,
+          "p05": 0.9614907253894903,
+          "median": 0.9970919784348963,
+          "mean": 0.9911082436281704,
+          "max": 1.0
+        }
+      },
+      "stage_profile": {
+        "kind": "cumulative_actor_stage_wall_time",
+        "seconds": {
+          "render": 297.450032,
+          "layout": 176.338258,
+          "vlm": 2009.705233,
+          "mfr": 549.69949,
+          "ocr": 2333.987671,
+          "assemble": 83.009659
+        }
+      },
+      "run_date": "2026-09-22",
+      "native_successful_documents": 368,
+      "native_successful_pages": 7072,
+      "flash_successful_documents": 368,
+      "flash_successful_pages": 7072
+    },
+    {
+      "name": "v4-advanced-shared",
+      "mineru": "4.0.5",
+      "topology": "4 complete local model stacks; RayOrch exposes Infer and Finish as separate logical Calls backed by the same four-replica physical Actor Pool",
+      "configuration": {
+        "gpus": 4,
+        "parse_mode": "auto",
+        "image_analysis": true,
+        "small_backend": "torch",
+        "vlm_engine": "vllm",
+        "vlm_server_url": "",
+        "vlm_model": "",
+        "batch_size": 16,
+        "ocr_batch_size": 16,
+        "input_batch_size": 16,
+        "inflight": 3,
+        "window_size": 8,
+        "layout_batch_size": 8,
+        "gpu_memory_utilization": 0.1
+      },
+      "native_wall_seconds": 1942.4434599522501,
+      "flash_startup_seconds": 10.56764687038958,
+      "flash_execution_seconds": 1234.5964967086911,
+      "flash_end_to_end_seconds": 1248.5180778410286,
+      "speedup_native_over_flash_execution": 1.5733427602707502,
+      "speedup_native_over_flash_end_to_end": 1.555799226640896,
+      "native_page_per_second": 3.640775212151527,
+      "flash_page_per_second_during_execution": 5.728187321811809,
+      "output_comparison": {
+        "documents_compared": 368,
+        "comparable_documents": 368,
+        "valid_documents": 368,
+        "exact_markdown_documents": 42,
+        "page_count_mismatches": 0,
+        "block_count_differences": 54,
+        "documents_with_errors": 0,
+        "token_jaccard": {
+          "min": 0.9614965492190338,
+          "p05": 0.9774007565161539,
+          "median": 0.9979140592407175,
+          "mean": 0.9944773304378707,
+          "max": 1.0
+        },
+        "token_multiset_f1": {
+          "min": 0.9067557048629604,
+          "p05": 0.9619897498915985,
+          "median": 0.9970919784348963,
+          "mean": 0.9905968688268395,
+          "max": 1.0
+        }
+      },
+      "stage_profile": {
+        "kind": "cumulative_actor_stage_wall_time",
+        "seconds": {
+          "render": 292.548,
+          "layout": 181.168,
+          "vlm": 1587.499,
+          "mfr": 518.219,
+          "ocr": 2257.481,
+          "assemble": 81.799
+        }
+      },
+      "comparison_to_v4_advanced_local": {
+        "old_execution_seconds": 1350.2523185890168,
+        "shared_execution_seconds": 1234.5964967086911,
+        "speedup": 1.0936790458977101,
+        "execution_time_reduction_fraction": 0.08565555729512536
+      },
+      "batch_ablation": {
+        "48_pdf_execution_seconds": {
+          "16": 244.56934629194438,
+          "32": 226.3382063563913,
+          "64": 363.83865927532315
+        },
+        "368_pdf_execution_seconds": {
+          "16": 1234.5964967086911,
+          "32": 1372.6180740743876
+        },
+        "selected_default": 16,
+        "note": "Batch 32 wins on the small tuning subset but regresses by 11.18% on the complete corpus; batch 64 causes severe shared-pool head-of-line blocking."
+      },
+      "run_date": "2026-09-22",
+      "native_successful_documents": 368,
+      "native_successful_pages": 7072,
+      "flash_successful_documents": 368,
+      "flash_successful_pages": 7072
+    }
+  ],
+  "date_range": {
+    "first_run": "2026-09-20",
+    "last_run": "2026-09-22"
+  }
+}

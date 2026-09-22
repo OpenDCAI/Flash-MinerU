@@ -1,0 +1,123 @@
+"""RayOrch graph for MinerU 4 Flash."""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any, cast
+
+from rayorch import F, Pipeline, Port, RayModule
+
+from .udfs import (
+    MinerU4FlashAnalyzeWindow,
+    MinerU4FlashAssembleDocument,
+    MinerU4FlashSplitPdf,
+)
+
+_STAGES = ("split", "analyze", "assemble")
+
+
+class MinerU4FlashPipeline(Pipeline):
+    """PDF -> windows -> Flash analysis -> ordered document output."""
+
+    def __init__(
+        self,
+        *,
+        output_dir: str,
+        model: str,
+        replicas: int = 1,
+        ocr_batch_size: int = 8,
+        num_gpus_per_replica: float = 1.0,
+        gpu_memory_utilization: float = 0.9,
+        render_dpi: int = 200,
+        start_page_id: int = 0,
+        end_page_id: int | None = None,
+        image_analysis: bool = False,
+        parse_mode: str = "auto",
+        window_size: int = 8,
+        small_backend: str = "torch",
+        vlm_engine: str = "vllm",
+        vlm_server_url: str = "",
+        vlm_api_key: str = "",
+        vlm_model: str = "",
+        vlm_max_concurrency: int = 100,
+        runtime_env: dict[str, Any] | None = None,
+        stage_options: Mapping[str, Mapping[str, Any]] | None = None,
+    ) -> None:
+        if render_dpi != 200 or start_page_id != 0 or end_page_id is not None:
+            raise ValueError(
+                "MinerU 4 pipelines currently require render_dpi=200 and the "
+                "full PDF page range"
+            )
+        options = _normalize_stage_options(stage_options)
+        common = {"runtime_env": dict(runtime_env)} if runtime_env else {}
+        self.split = (
+            RayModule(MinerU4FlashSplitPdf)
+            .pre_init(window_size=window_size, parse_mode=parse_mode)
+            .ray_options(
+                **_merge(
+                    {**common, "replicas": replicas, "batch_size": 1, "num_cpus": 1},
+                    options.get("split", {}),
+                )
+            )
+        )
+        self.analyze = (
+            RayModule(MinerU4FlashAnalyzeWindow)
+            .pre_init(
+                model_base_dir=model,
+                small_backend=small_backend,
+                vlm_engine=vlm_engine,
+                vlm_server_url=vlm_server_url,
+                vlm_api_key=vlm_api_key,
+                vlm_model=vlm_model,
+                vlm_max_concurrency=vlm_max_concurrency,
+                gpu_memory_utilization=gpu_memory_utilization,
+                image_analysis=image_analysis,
+            )
+            .ray_options(
+                **_merge(
+                    {
+                        **common,
+                        "replicas": replicas,
+                        "batch_size": ocr_batch_size,
+                        "num_gpus": num_gpus_per_replica,
+                        "num_cpus": 1,
+                    },
+                    options.get("analyze", {}),
+                )
+            )
+        )
+        self.assemble = (
+            RayModule(MinerU4FlashAssembleDocument)
+            .pre_init(output_dir=output_dir)
+            .ray_options(
+                **_merge(
+                    {**common, "replicas": replicas, "batch_size": 4, "num_cpus": 1},
+                    options.get("assemble", {}),
+                )
+            )
+        )
+
+    def forward(self, pdfs: Port):
+        windows = F.expand(cast(Port, self.split(pdfs)))
+        analyzed = cast(Port, self.analyze(windows))
+        return self.assemble(F.reduce(analyzed), pdfs)
+
+
+def _normalize_stage_options(
+    value: Mapping[str, Mapping[str, Any]] | None,
+) -> dict[str, dict[str, Any]]:
+    if value is None:
+        return {}
+    unknown = sorted(set(value) - set(_STAGES))
+    if unknown:
+        raise ValueError(f"unknown MinerU 4 stage {unknown[0]!r}")
+    return {stage: dict(overrides) for stage, overrides in value.items()}
+
+
+def _merge(
+    defaults: Mapping[str, Any], overrides: Mapping[str, Any]
+) -> dict[str, Any]:
+    return {**defaults, **overrides}
+
+
+__all__ = ["MinerU4FlashPipeline"]

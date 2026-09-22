@@ -1,0 +1,82 @@
+{
+  "date": "2026-09-20",
+  "pipeline": "v2.5",
+  "hardware": {
+    "gpus": 4,
+    "gpu_model": "NVIDIA H20",
+    "driver_version": "535.247.01",
+    "cuda_version": "12.9"
+  },
+  "software": {
+    "mineru": "3.4.4",
+    "mineru-vl-utils": "1.2.1",
+    "ray": "2.50.0",
+    "rayorch": "0.1.0",
+    "torch": "2.7.1",
+    "vllm": "0.10.1.1"
+  },
+  "configuration": {
+    "parse_mode": "auto",
+    "image_analysis": false,
+    "native_workers": 4,
+    "native_worker_batch_size": 16,
+    "native_shard_pages": [
+      1768,
+      1768,
+      1768,
+      1768
+    ],
+    "flash_replicas": 4,
+    "flash_ocr_batch_size": 128,
+    "flash_input_batch_size": 24,
+    "flash_max_active_input_batches": 4
+  },
+  "corpus": {
+    "pdfs": 368,
+    "pages": 7072,
+    "bytes": 1101539712,
+    "sha256": "184cf525589ace8a192e52cb8a1b671a8144d9d9f0bad23191de6be7dd8d7298"
+  },
+  "native": {
+    "end_to_end_seconds": 1177.0084843952209,
+    "pdf_per_second": 0.3126570495276323,
+    "page_per_second": 6.008452864835369,
+    "successful_documents": 368,
+    "successful_pages": 7072,
+    "mean_gpu_utilization_percent": [
+      59.543,
+      59.868,
+      59.4,
+      60.603
+    ]
+  },
+  "flash": {
+    "startup_seconds": 44.158590422943234,
+    "execution_seconds": 439.7159175295383,
+    "end_to_end_seconds": 487.25034411251545,
+    "pdf_per_second_during_execution": 0.8369039767028205,
+    "page_per_second_during_execution": 16.083111204462895,
+    "successful_documents": 368,
+    "successful_pages": 7072,
+    "mean_gpu_utilization_percent": [
+      51.302,
+      50.064,
+      49.698,
+      49.277
+    ]
+  },
+  "speedup": {
+    "native_end_to_end_over_flash_execution": 2.676747503269891,
+    "native_end_to_end_over_flash_end_to_end": 2.4156134492609556
+  },
+  "output_comparison": {
+    "documents_compared": 368,
+    "documents_with_readable_outputs": 368,
+    "page_count_mismatches": 0,
+    "token_jaccard_min": 0.9059343434343434,
+    "token_jaccard_mean": 0.9902032843890438,
+    "token_multiset_f1_min": 0.7742355808999539,
+    "token_multiset_f1_mean": 0.9931462949914003,
+    "notes": "VLM generation is not bitwise deterministic across batching layouts. Repeated copies of the same source PDF also varied within native MinerU. All outputs were readable and all page counts matched."
+  }
+}

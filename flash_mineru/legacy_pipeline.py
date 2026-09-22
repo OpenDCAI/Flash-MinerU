@@ -5,9 +5,63 @@ from __future__ import annotations
 import os
 import warnings
 
-from rayorch import Executor
+from rayorch import Executor, Pipeline, RayModule
 
-from .dag_pipeline import FlashMinerRayOrchPipeline
+
+class LegacyFlashMinerRayOrchPipeline(Pipeline):
+    """The original PDF-grained graph retained only for the legacy API."""
+
+    def __init__(
+        self,
+        *,
+        model: str,
+        replicas: int,
+        num_gpus_per_replica: float,
+        save_dir: str,
+        engine_gpu_util_rate_to_ray_cap: float,
+    ) -> None:
+        # Keep the deprecated, dependency-heavy implementation lazy so a plain
+        # ``import flash_mineru`` does not import its model stack.
+        from .mineru_core.dispatch_mineru_class import (
+            Convert2MDOp,
+            Pdf2ImageOp,
+            ProcessImagesOp,
+        )
+
+        common_options = {
+            "replicas": replicas,
+            "batch_size": 1,
+        }
+        self.pdf2img = RayModule(Pdf2ImageOp).ray_options(
+            **common_options,
+            num_gpus=0.0,
+        )
+        self.process_img = (
+            RayModule(ProcessImagesOp)
+            .pre_init(
+                model=model,
+                gpu_memory_utilization=(
+                    engine_gpu_util_rate_to_ray_cap * num_gpus_per_replica
+                ),
+            )
+            .ray_options(
+                **common_options,
+                num_gpus=num_gpus_per_replica,
+            )
+        )
+        self.img2md = (
+            RayModule(Convert2MDOp)
+            .pre_init(output_dir=save_dir, parse_method="vlm")
+            .ray_options(
+                **common_options,
+                num_gpus=0.0,
+            )
+        )
+
+    def forward(self, pdf_paths):
+        images = self.pdf2img(pdf_paths)
+        model_results = self.process_img(images)
+        return self.img2md(model_results, images)
 
 
 class SequentialRayPipeline:
@@ -23,13 +77,12 @@ class SequentialRayPipeline:
         save_dir: str = "outputs_mineru",
     ) -> None:
         self.save_dir = save_dir
-        self._pipeline = FlashMinerRayOrchPipeline(
+        self._pipeline = LegacyFlashMinerRayOrchPipeline(
             model=model,
             replicas=replicas,
             num_gpus_per_replica=num_gpus_per_replica,
             save_dir=save_dir,
             engine_gpu_util_rate_to_ray_cap=engine_gpu_util_rate_to_ray_cap,
-            batch_size=replicas,
         )
         self.pdf2img = self._pipeline.pdf2img
         self.process_img = self._pipeline.process_img
@@ -103,4 +156,8 @@ class MineruEngineLegacy:
         self._pipe.close()
 
 
-__all__ = ["MineruEngineLegacy", "SequentialRayPipeline"]
+__all__ = [
+    "LegacyFlashMinerRayOrchPipeline",
+    "MineruEngineLegacy",
+    "SequentialRayPipeline",
+]

@@ -161,7 +161,7 @@ def main() -> int:
     except ImportError as e:
         log(f"ERROR: MineruEngine import failed: {e}")
         log(
-            "Check that rayorch==0.1.0 and the Flash-MinerU dependencies are installed."
+            "Check that rayorch>=0.1.1,<0.2 and the Flash-MinerU dependencies are installed."
         )
         return 2
 

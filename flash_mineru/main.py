@@ -1,16 +1,16 @@
-"""
-Published user API: :class:`MineruEngine` only wires the v1.0.0 DAG path from :mod:`flash_mineru.dag_pipeline`.
+"""Published user API backed by the versioned RayOrch DAG engine.
 
-v0.0.4 lives in :mod:`flash_mineru.legacy_pipeline` (:class:`MineruEngineLegacy`).
+The deprecated sequential implementation remains available as
+:class:`flash_mineru.legacy_pipeline.MineruEngineLegacy`.
 """
 
 from flash_mineru.dag_pipeline import MineruRayOrchDagEngine
 
 
 class MineruEngine(MineruRayOrchDagEngine):
-    """Default Flash-MinerU engine (v1.0.0): pipeline-parallel PDF → Markdown.
+    """Run a selected MinerU pipeline through RayOrch.
 
-    Implemented in :mod:`flash_mineru.dag_pipeline`. For the deprecated sequential path see
+    For the deprecated sequential path, see
     :class:`~flash_mineru.legacy_pipeline.MineruEngineLegacy`.
     """
 
