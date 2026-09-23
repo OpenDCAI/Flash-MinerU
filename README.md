@@ -6,13 +6,12 @@
 [![PyPI](https://img.shields.io/pypi/v/flash-mineru)](https://pypi.org/project/flash-mineru/)
 [![Python](https://img.shields.io/pypi/pyversions/flash-mineru)](https://pypi.org/project/flash-mineru/)
 [![Stars](https://img.shields.io/github/stars/OpenDCAI/Flash-MinerU?style=social)](https://github.com/OpenDCAI/Flash-MinerU)
-[![RayOrch Stars](https://img.shields.io/github/stars/OpenDCAI/RayOrch?style=social&label=RayOrch)](https://github.com/OpenDCAI/RayOrch)
 [![Issues](https://img.shields.io/github/issues/OpenDCAI/Flash-MinerU)](https://github.com/OpenDCAI/Flash-MinerU/issues)
 
 [简体中文](./README-zh.md) | English · [Benchmark](./docs/BENCHMARK.md) · [Results](./docs/benchmark-results/)
 </div>
 
-Flash-MinerU is a downstream project of [RayOrch](https://github.com/OpenDCAI/RayOrch), built as a lightweight RayOrch execution layer for [MinerU](https://github.com/opendatalab/MinerU). It turns PDF parsing into a lineage-aware pipeline: PDFs are split into pages or windows, ready work from different documents is batched on shared CPU/GPU actors, and results are restored to the correct document and page order.
+Flash-MinerU is a downstream project of [RayOrch](https://github.com/OpenDCAI/RayOrch) [![RayOrch Stars](https://img.shields.io/github/stars/OpenDCAI/RayOrch?style=social&label=RayOrch)](https://github.com/OpenDCAI/RayOrch), built as a lightweight RayOrch execution layer for [MinerU](https://github.com/opendatalab/MinerU). It turns PDF parsing into a lineage-aware pipeline: PDFs are split into pages or windows, ready work from different documents is batched on shared CPU/GPU actors, and results are restored to the correct document and page order.
 
 It does not replace MinerU's models or output format. Each supported MinerU generation lives in an explicit, versioned pipeline, so applications can upgrade one pipeline at a time while keeping a small Python API.
 

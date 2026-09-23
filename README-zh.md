@@ -6,13 +6,12 @@
 [![PyPI](https://img.shields.io/pypi/v/flash-mineru)](https://pypi.org/project/flash-mineru/)
 [![Python](https://img.shields.io/pypi/pyversions/flash-mineru)](https://pypi.org/project/flash-mineru/)
 [![Stars](https://img.shields.io/github/stars/OpenDCAI/Flash-MinerU?style=social)](https://github.com/OpenDCAI/Flash-MinerU)
-[![RayOrch Stars](https://img.shields.io/github/stars/OpenDCAI/RayOrch?style=social&label=RayOrch)](https://github.com/OpenDCAI/RayOrch)
 [![Issues](https://img.shields.io/github/issues/OpenDCAI/Flash-MinerU)](https://github.com/OpenDCAI/Flash-MinerU/issues)
 
 简体中文 | [English](./README.md) · [Benchmark](./docs/BENCHMARK.zh.md) · [实验结果](./docs/benchmark-results/)
 </div>
 
-Flash-MinerU 是 [RayOrch](https://github.com/OpenDCAI/RayOrch) 的衍生项目，为 [MinerU](https://github.com/opendatalab/MinerU) 提供轻量级 RayOrch 执行层。它把 PDF 解析变成一条带血缘的数据流水线：将 PDF 拆成页面或窗口，把不同文档中已经就绪的任务交给共享 CPU/GPU Actor 批处理，最后按照正确的文档归属和页序还原结果。
+Flash-MinerU 是 [RayOrch](https://github.com/OpenDCAI/RayOrch) [![RayOrch Stars](https://img.shields.io/github/stars/OpenDCAI/RayOrch?style=social&label=RayOrch)](https://github.com/OpenDCAI/RayOrch) 的衍生项目，为 [MinerU](https://github.com/opendatalab/MinerU) 提供轻量级 RayOrch 执行层。它把 PDF 解析变成一条带血缘的数据流水线：将 PDF 拆成页面或窗口，把不同文档中已经就绪的任务交给共享 CPU/GPU Actor 批处理，最后按照正确的文档归属和页序还原结果。
 
 Flash-MinerU 不替换 MinerU 的模型和输出格式。每一代受支持的 MinerU 都对应一条显式、版本化的管线，应用可以逐条升级，同时保持一套精简的 Python API。
 
