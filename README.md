@@ -1,245 +1,229 @@
 # Flash-MinerU ⚡️📄
 
 <div align="center">
-<img width="256" height="256" alt="image" src="https://github.com/user-attachments/assets/5a5ab2df-7e8d-41cc-83d8-1ab7ade6aef5" />
+<img width="220" height="220" alt="Flash-MinerU" src="https://github.com/user-attachments/assets/5a5ab2df-7e8d-41cc-83d8-1ab7ade6aef5" />
 
+[![PyPI](https://img.shields.io/pypi/v/flash-mineru)](https://pypi.org/project/flash-mineru/)
+[![Python](https://img.shields.io/pypi/pyversions/flash-mineru)](https://pypi.org/project/flash-mineru/)
+[![Stars](https://img.shields.io/github/stars/OpenDCAI/Flash-MinerU?style=social)](https://github.com/OpenDCAI/Flash-MinerU)
+[![RayOrch Stars](https://img.shields.io/github/stars/OpenDCAI/RayOrch?style=social&label=RayOrch)](https://github.com/OpenDCAI/RayOrch)
+[![Issues](https://img.shields.io/github/issues/OpenDCAI/Flash-MinerU)](https://github.com/OpenDCAI/Flash-MinerU/issues)
 
-
-[![](https://img.shields.io/github/stars/OpenDCAI/Flash-MinerU?style=social)](https://github.com/OpenDCAI/Flash-MinerU)
-[![](https://img.shields.io/github/issues-raw/OpenDCAI/Flash-MinerU)](https://github.com/OpenDCAI/Flash-MinerU/issues)
-[![issue resolution](https://img.shields.io/github/issues-closed-raw/OpenDCAI/Flash-MinerU)](https://github.com/OpenDCAI/Flash-MinerU/issues?q=is%3Aissue%20state%3Aclosed)
-[![](https://img.shields.io/github/issues-pr-raw/OpenDCAI/Flash-MinerU)](https://github.com/OpenDCAI/Flash-MinerU/pulls)
-[![pr resolution](https://img.shields.io/github/issues-pr-closed-raw/OpenDCAI/Flash-MinerU)](https://github.com/OpenDCAI/Flash-MinerU/pulls?q=is%3Apr+is%3Aclosed)
-[![](https://img.shields.io/github/contributors/OpenDCAI/Flash-MinerU)](https://github.com/OpenDCAI/Flash-MinerU/graphs/contributors)
-[![](https://img.shields.io/github/repo-size/OpenDCAI/Flash-MinerU?color=green)](https://github.com/OpenDCAI/Flash-MinerU)
-
-
-[![PyPI version](https://img.shields.io/pypi/v/flash-mineru)](https://pypi.org/project/flash-mineru/)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/flash-mineru)](https://pypi.org/project/flash-mineru/)
-[![PyPI - Downloads](https://img.shields.io/pypi/dm/flash-mineru?style=flat&logo=python)](https://pypistats.org/packages/flash-mineru)
-[![PyPI Downloads](https://static.pepy.tech/personalized-badge/flash-mineru?period=total&units=ABBREVIATION&left_color=GREY&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/flash-mineru)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/OpenDCAI/Flash-MinerU)
-
-[简体中文](./README-zh.md) | English
-
+[简体中文](./README-zh.md) | English · [Benchmark](./docs/BENCHMARK.md) · [Results](./docs/benchmark-results/)
 </div>
 
+Flash-MinerU is a downstream project of [RayOrch](https://github.com/OpenDCAI/RayOrch), built as a lightweight RayOrch execution layer for [MinerU](https://github.com/opendatalab/MinerU). It turns PDF parsing into a lineage-aware pipeline: PDFs are split into pages or windows, ready work from different documents is batched on shared CPU/GPU actors, and results are restored to the correct document and page order.
 
+It does not replace MinerU's models or output format. Each supported MinerU generation lives in an explicit, versioned pipeline, so applications can upgrade one pipeline at a time while keeping a small Python API.
 
-> Accelerating the **VLM inference pipeline** of MinerU with **Ray**, turning PDF parsing into a **scalable data infrastructure component**
+> [!IMPORTANT]
+> Flash-MinerU is an independent OpenDCAI project, not an official MinerU distribution. It reuses and adapts MinerU runtime components under the repository license, while its RayOrch DAGs, multi-GPU scheduling, release cadence, tested dependency combinations, and performance claims are maintained by Flash-MinerU. Please report Flash-MinerU pipeline issues here; report upstream model/runtime issues to MinerU when they also reproduce with official MinerU.
 
-Flash-MinerU is a **lightweight, low-intrusion acceleration layer** for MinerU. Beyond speeding up VLM inference, it upgrades PDF parsing into a **high-throughput, distributed data pipeline**: a useful building block for modern AI systems.
-
-PDFs are one of the most important **high-quality knowledge sources** for AI workflows, including papers, reports, and manuals. Converting them into **structured, model-ready data** such as Markdown and JSON is a foundational step for:
-
-- 📊 **Data governance and curation**
-- 🧪 **Synthetic data generation pipelines**
-- 🧠 **LLM / MLLM training and evaluation**
-
-Flash-MinerU focuses on making this stage **scalable, efficient, and production-ready**:
-
-- **Minimal dependencies, lightweight installation**
-  - One-line install via `pip install flash-mineru`
-  - Works in constrained or domestic environments such as METAX
-- **System-level acceleration, not reimplementation**
-  - Fully reuses MinerU’s logic and data structures
-  - Preserves output consistency
-- **Designed for scale**
-  - Multi-GPU / multi-process / multi-node ready
-  - Built on **Ray** as a unified execution layer
-
----
-
-## ✨ Features
-
-- 🚀 **Ray-powered distributed execution**  
-  Turns PDF parsing into a **scalable data pipeline**, from single-node multi-GPU setups to clusters
-
-- 🧠 **High-throughput VLM inference**  
-  Focuses on the bottleneck stage and currently defaults to **vLLM**
-
-- 🔄 **Pipeline-parallel execution (core improvement)**  
-  Uses an asynchronous pipeline with cross-stage overlap for sustained high utilization
-
-- 🧩 **Low-intrusion, composable design**  
-  Retains MinerU’s `middle_json` and downstream logic for easy integration
-
----
-
-## 🎯 How pipeline parallelism helps
-
-Flash-MinerU turns MinerU’s sequential pipeline into an **asynchronous pipelined system**:
-
-- 🟢 **Much higher GPU utilization**  
-  Keeps GPUs busy **more than 90% of the time**, while vanilla MinerU is often around **40-50%** because stages block each other
-
-- 🔄 **Cross-stage overlap (key speedup)**  
-  Different batches run in different stages at the same time, such as render / VLM / Markdown, instead of waiting for full completion
-
-- ⚡ **Result: much higher throughput**  
-  Less idle time plus more overlap leads to **significantly faster end-to-end processing**
-
-<table width="100%">
-<tr>
-<td width="50%" valign="top" align="center">
-<strong>Left — bubble schedule (before)</strong><br/>
-<em>Batched sequential execution; GPU idle gaps.</em><br/><br/>
-<img src="./docs/bubble.png" alt="Timeline: batched sequential execution with visible GPU idle gaps" width="100%" />
-</td>
-<td width="50%" valign="top" align="center">
-<strong>Right — pipelined (Flash-MinerU)</strong><br/>
-<em>Asynchronous pipeline; high utilization.</em><br/><br/>
-<img src="./docs/pipelined.png" alt="Timeline: asynchronous pipelined execution with high GPU utilization" width="100%" />
-</td>
-</tr>
-</table>
-
----
-
-## 📦 Installation
-
-### Basic installation (lightweight mode)
-
-Suitable if you have **already installed the inference backend manually** (e.g., vLLM), or are using an image with a prebuilt environment:
-
-```bash
-pip install flash-mineru
+```mermaid
+flowchart LR
+    A[PDFs] --> B[Ordered pages / windows]
+    B --> C[CPU render]
+    C --> D[Shared GPU actor pool<br/>cross-document batching]
+    D --> E[Restore lineage and order]
+    E --> F[Markdown / JSON]
 ```
 
-### Install with vLLM backend enabled (optional)
+## Why Flash-MinerU?
 
-If you want Flash-MinerU to install vLLM as the inference backend for you:
+A model-hosted document pipeline is usually limited by scheduling rather than a single model call: documents have different lengths, CPU and GPU stages progress at different rates, and batching must not lose document ownership or page order. Flash-MinerU uses RayOrch to overlap stages, batch ready work across documents, and keep lineage explicit throughout the DAG.
 
-```bash
-pip install flash-mineru[vllm]
-```
+The `v4-advanced-shared` pipeline also demonstrates shared actor reuse: `Infer` and `Finish` are separate logical DAG calls but run on the same physical four-replica model pool. Each actor loads one complete model stack, while intermediate state travels through RayOrch ports instead of relying on replica affinity. On the validated 368-PDF workload this reduced execution time from 1,350.25 s for `v4-advanced-local` to 1,234.60 s, a further **9.4% improvement**.
 
----
+## Results
 
-## 🚀 Quickstart
+The following results use the same 368 PDFs (7,072 pages) on 4× NVIDIA H20. “Execution” measures `Executor.run` after actor initialization; “cold” includes Ray startup, model initialization, execution, and cleanup. Output quality is compared with the corresponding native MinerU run.
 
-### Minimal Python API example
+| Pipeline | Native | Flash execution | Execution speedup | Cold speedup | Mean Jaccard / F1 |
+|---|---:|---:|---:|---:|---:|
+| `v2.5` | 1,177.01 s | 439.72 s | **2.68×** | 2.42× | 0.9902 / 0.9931 |
+| `v2.5-pro-2604` | 1,449.57 s | 545.72 s | **2.66×** | 2.42× | 0.9898 / 0.9869 |
+| `v2.5-pro-2605` | 1,468.23 s | 553.58 s | **2.65×** | 2.43× | 0.9903 / 0.9883 |
+| `v4-flash` | 1,044.69 s | 1,157.28 s | 0.90× | 0.90× | 0.9997 / 0.9999 |
+| `v4-basic` | 1,642.11 s | 1,550.47 s | 1.06× | 1.05× | 0.9999 / 1.0000 |
+| `v4-standard` | 1,822.74 s | 1,435.38 s | **1.27×** | 1.26× | 1.0000 / 0.9999 |
+| `v4-advanced` | 2,559.79 s | 1,899.27 s | **1.35×** | 1.34× | 0.9934 / 0.9906 |
+| `v4-advanced-local` | 1,942.44 s | 1,350.25 s | **1.44×** | 1.42× | 0.9940 / 0.9911 |
+| `v4-advanced-shared` | 1,942.44 s | **1,234.60 s** | **1.57×** | **1.56×** | 0.9945 / 0.9906 |
+
+All runs completed 368/368 documents and 7,072/7,072 pages without page-count mismatches. `v4-flash` is included as a transparent negative result: its workload has little expensive batchable model work, so a finer-grained DAG adds overhead instead of improving throughput. See the [benchmark methodology](./docs/BENCHMARK.md) and [machine-readable results](./docs/benchmark-results/) for configurations, timing policy, quality checks, and batch ablations.
+
+## Installation
+
+MinerU 2.5 and MinerU 4 use incompatible major dependency stacks. Install the base package on a lightweight driver, or select exactly one runtime extra for an inference environment.
+
+| Installation | Use case |
+|---|---|
+| `pip install flash-mineru` | Public API, RayOrch, and a lightweight driver |
+| `pip install "flash-mineru[mineru25]"` | MinerU 2.5 and 2.5 Pro pipelines |
+| `pip install "flash-mineru[mineru4]"` | MinerU 4 small models with an external HTTP VLM server |
+| `pip install "flash-mineru[mineru4-local-vllm]"` | MinerU 4 with local vLLM, including `v4-advanced-local` and `v4-advanced-shared` |
+
+Do not install the MinerU 2.5 and MinerU 4 extras in the same environment. Use separate conda environments and RayOrch `runtime_env` when one driver must run both generations. `flash-mineru[vllm]` remains an old MinerU 2.5 compatibility alias and is not recommended for new setups.
+
+## Prepare models
+
+Model preparation is explicit: importing Flash-MinerU never downloads checkpoints.
+
+### Use an existing local checkpoint
 
 ```python
-from flash_mineru import MineruEngine
+from flash_mineru import prepare_pipeline
 
-# Path to PDFs
-pdfs = [
-    "resnet.pdf",
-    "yolo.pdf",
-    "text2sql.pdf",
-]
-
-engine = MineruEngine(
-    model="<path_to_local>/MinerU2.5-2509-1.2B",
-    # Model can be downloaded from https://huggingface.co/opendatalab/MinerU2.5-2509-1.2B
-    batch_size=16,             # PDFs per logical batch; often choose a multiple of GPU count
-    replicas=8,                # Parallel vLLM / model instances; often match GPU count
-    num_gpus_per_replica=0.9,  # GPU memory fraction for vLLM KV cache per instance; 1.0 uses full VRAM headroom
-    save_dir="outputs_mineru", # Output directory for parsed results
-    inflight=4,                # Pipeline depth (v1.0.0 path); can raise on high-memory hosts with diminishing returns
+model = prepare_pipeline(
+    "v2.5",
+    model="/shared/models/MinerU2.5-2509-1.2B",
 )
-
-# Legacy v0.0.4 sequential batching (deprecated): from flash_mineru import MineruEngineLegacy
-
-results = engine.run(pdfs)
-print(results)  # list[list[str]], dir name of the output files
 ```
 
-### Output structure
+### Download a MinerU 2.5 checkpoint
 
-* Each PDF’s parsing results will be generated under:
+```python
+model = prepare_pipeline(
+    "v2.5-pro-2605",             # Uses the registered default Hugging Face repo.
+    download=True,                # Network access is opt-in.
+    cache_dir="/shared/hf-cache",
+)
+```
 
-  ```
-  <save_dir>/<pdf_name>/
-  ```
+Registered defaults are `opendatalab/MinerU2.5-2509-1.2B`, `opendatalab/MinerU2.5-Pro-2604-1.2B`, and `opendatalab/MinerU2.5-Pro-2605-1.2B`.
 
-* The Markdown file is located by default at:
+### Prepare a MinerU 4 model root
 
-  ```
-  <save_dir>/<pdf_name>/vlm/<pdf_name>.md
-  ```
+MinerU 4 uses a model root rather than one checkpoint directory. Prepare it inside the MinerU 4 environment and place it on storage visible to every worker:
 
----
+```python
+model_root = prepare_pipeline(
+    "v4-advanced-shared",
+    model="/shared/models/mineru4",
+    download=True,
+)
+```
 
-## 📊 Benchmark
+With `download=False` (the default), an existing shared root can be passed by a lightweight driver and the authoritative runtime/model validation occurs when the actors start. `v4-standard` and `v4-advanced` only need local small models when an external `vlm_server_url` is configured; `v4-advanced-local` and `v4-advanced-shared` require a local vLLM model and do not accept an HTTP VLM server.
 
-**Scripts:** [English](./docs/BENCHMARK.md) · [简体中文](./docs/BENCHMARK.zh.md)
+## Run
 
-### Results (368 PDFs, single-node ~8× A100 class)
+### Recommended Python API
 
-| Method | Inference configuration | Total time |
-|----|----|----|
-| Flash-MinerU **v1.0.0** | `MineruEngine`, 8 replicas, `inflight=8`, pipeline parallelism | **~8.5 min** |
-| MinerU (vanilla) | **Hand-spawned** pool of 8 `mineru` processes (**Benchmark-mineru.py** **parallel** mode, one GPU per process, `vlm-auto-engine`) | ~14 min |
-| Flash-MinerU **v0.0.4** | `MineruEngineLegacy`, 8 replicas × 1 GPU, `batch_size=16`, batch-sequential | ~23 min |
-| MinerU (vanilla) | vLLM, **single GPU** | ~65 min |
+```python
+from flash_mineru import MineruEngine, prepare_pipeline
 
-Commands: [docs/BENCHMARK.md](./docs/BENCHMARK.md).
+pdfs = ["paper-a.pdf", "paper-b.pdf"]
+model = prepare_pipeline("v2.5", model="/shared/models/MinerU2.5-2509-1.2B")
 
-### Summary
+with MineruEngine(
+    pipeline_version="v2.5",
+    model=model,
+    save_dir="outputs",
+    replicas=4,             # Usually one model actor per GPU.
+    batch_size=16,          # Compatibility grouping of returned output paths.
+    ocr_batch_size=128,     # Ready pages batched into one model call.
+    input_batch_size=24,    # PDFs admitted to one RayOrch input batch.
+    inflight=4,             # Input batches allowed to overlap.
+) as engine:
+    results = engine.run(pdfs)
 
-- **v1.0.0** is about **~1.7×** faster wall time than the **eight-process** baseline (~8.5 min vs ~14 min)
-- **v0.0.4** (`MineruEngineLegacy`) is slower than that baseline (~23 min), which highlights what **pipeline parallelism** adds versus “many full stacks in parallel”
-- **~65 min single-GPU** is the same-corpus reference baseline
+print(results)
+```
 
-<details>
-<summary><strong>Experimental setup (expand)</strong></summary>
+The context manager releases persistent Ray actors after the run. If an engine must stay alive across multiple calls, construct it once and call `engine.close()` when finished.
 
-- **Dataset:** 23 paper PDFs (≈9–37 pages each) × 16 copies → **368** files; default folder `test/sample_pdfs`
-- **Versions:** MinerU **v2.7.5**; Flash-MinerU **v0.0.4** = `MineruEngineLegacy` (sequential stages per batch); **v1.0.0** = `MineruEngine` (pipeline parallelism, default API)
-- **Hardware:** single host, **8 × NVIDIA A100**
+For the shortest path from installation to a working run, and copy-paste configurations for every bundled pipeline, see **[Running every pipeline](./docs/PIPELINES.md)**. Start with one PDF and `replicas=1`, verify the output, and then increase replicas to the number of available GPUs.
 
-</details>
+### MinerU 4 Advanced with a shared actor pool
 
-> Note: Throughput-focused. Output shape matches MinerU. Upstream does not ship a polished official multi-GPU “one click” path; the eight-process row is our **benchmark script** sharding **eight separate** `mineru` runs.
+```python
+from flash_mineru import MineruEngine, prepare_pipeline
 
----
+model_root = prepare_pipeline(
+    "v4-advanced-shared",
+    model="/shared/models/mineru4",
+)
 
-## 🗺️ Roadmap
+with MineruEngine(
+    pipeline_version="v4-advanced-shared",
+    model=model_root,
+    save_dir="outputs-v4",
+    replicas=4,
+    batch_size=16,
+    ocr_batch_size=16,                  # Validated default for the shared pool.
+    input_batch_size=16,
+    inflight=3,
+    num_gpus_per_replica=1.0,           # Ray reserves one GPU for each actor.
+    engine_gpu_util_rate_to_ray_cap=0.1,# Local vLLM memory-utilization setting.
+    image_analysis=True,
+) as engine:
+    results = engine.run(pdfs)
+```
 
-* [x] Benchmark scripts & docs — [docs/BENCHMARK.md](./docs/BENCHMARK.md)
-* [ ] Support for more inference backends (e.g., sglang)
-* [ ] Service-oriented deployment (HTTP API / task queue)
-* [ ] Sample datasets and more comprehensive documentation
+### Existing Ray cluster or separate actor environment
 
----
+```python
+import ray
+from flash_mineru import MineruEngine
 
-## 🤝 Acknowledgements
+ray.init(address="auto")
 
-* **MinerU**
-  This project is built upon MinerU’s overall algorithm design and engineering practices, and parallelizes its VLM inference pipeline.
-  The `mineru_core/` directory contains code logic copied from and adapted to the MinerU project.
-  We extend our sincere respect and gratitude to the original authors and all contributors of MinerU.
-  🔗 Official repository / homepage:
-  [https://github.com/opendatalab/MinerU](https://github.com/opendatalab/MinerU)
+with MineruEngine(
+    pipeline_version="v4-standard",
+    model="/shared/models/mineru4",
+    save_dir="outputs-v4",
+    replicas=3,
+    batch_size=16,
+    runtime_env={"conda": "mineru4"},
+    vlm_server_url="http://vlm-server:8000/v1",
+) as engine:
+    results = engine.run(pdfs)
+```
 
-* **Ray**
-  Provides powerful abstractions for distributed and parallel computing, making multi-GPU and multi-process orchestration simpler and more reliable.
-  🔗 Official website:
-  [https://www.ray.io/](https://www.ray.io/)
-  🔗 Official GitHub:
-  [https://github.com/ray-project/ray](https://github.com/ray-project/ray)
+The named environment must exist on the worker nodes and contain Flash-MinerU plus the selected MinerU runtime. PDF paths, model roots, and output paths must be visible from those workers.
 
-* **vLLM**
-  Provides a high-throughput, production-ready inference engine (currently the default backend).
-  🔗 Official website:
-  [https://vllm.ai/](https://vllm.ai/)
-  🔗 Official GitHub:
-  [https://github.com/vllm-project/vllm](https://github.com/vllm-project/vllm)
+## Pipelines
 
----
+```python
+from flash_mineru import pipeline_names
+
+print(pipeline_names())
+```
+
+| Pipeline | Runtime | Execution shape |
+|---|---|---|
+| `v2.5` | `mineru25` | Cross-document page batching on a shared VLM pool |
+| `v2.5-pro-2604`, `v2.5-pro-2605` | `mineru25` | Page batching followed by ordered document-level table merging |
+| `v4-flash`, `v4-basic` | `mineru4` | Window scheduling for the local small-model stages |
+| `v4-standard`, `v4-advanced` | `mineru4` | Local small models plus a shared HTTP or local VLM |
+| `v4-advanced-local` | `mineru4-local-vllm` | One complete local model stack per GPU actor |
+| `v4-advanced-shared` | `mineru4-local-vllm` | Separate Infer/Finish calls sharing the same resident actor pool |
+
+Each implementation is self-contained under `flash_mineru/pipelines/<version>/` with its pipeline, UDFs, and preparation logic. This keeps upstream MinerU version changes isolated and makes new pipelines easier to review.
+
+The table describes the required installation extra, not an interchangeability promise between MinerU generations. Use [the pipeline guide](./docs/PIPELINES.md) for model preparation, external-server requirements, runnable examples, recommended starting values, and troubleshooting.
+
+## Outputs
+
+MinerU 2.5 writes each result under:
+
+```text
+<save_dir>/<pdf_name>/vlm/<pdf_name>.md
+```
+
+MinerU 4 preserves its tier-specific layout:
+
+```text
+<save_dir>/<pdf_name>/<flash|basic|standard|advanced>/markdown.md
+```
+
+`MineruEngine.run()` preserves the historical `list[list[str]]` return shape. `MineruEngineLegacy` remains available for compatibility with the deprecated sequential implementation, but new integrations should use `MineruEngine`.
+
+## Acknowledgements
+
+Flash-MinerU builds on [MinerU](https://github.com/opendatalab/MinerU), [Ray](https://github.com/ray-project/ray), [RayOrch](https://github.com/OpenDCAI/RayOrch), and [vLLM](https://github.com/vllm-project/vllm). We thank their authors and contributors.
 
 ## License
 
-Flash-MinerU is based on and contains modified source code from **MinerU**.
-
-This repository is licensed under the **MinerU Open Source License** (Apache License 2.0 plus additional terms), as provided in [LICENSE](./LICENSE).
-
-In particular, users should pay attention to the following obligations in the MinerU Open Source License:
-- a separate commercial license is required if the applicable MAU or revenue thresholds are exceeded; and
-- if you provide online services based on this project to third parties, you must clearly indicate that MinerU is used.
-
-The full text of Apache License 2.0 is included in [`licenses/APACHE-2.0.txt`](./licenses/APACHE-2.0.txt) for reference.
-
-Third-party dependencies remain under their respective licenses.
+Flash-MinerU is based on and contains modified source code from MinerU. This repository is licensed under the [MinerU Open Source License](./LICENSE), which is Apache License 2.0 with additional terms. Please review its commercial-use thresholds and attribution requirements before deployment. Third-party dependencies remain under their respective licenses; the Apache License 2.0 text is included at [`licenses/APACHE-2.0.txt`](./licenses/APACHE-2.0.txt).

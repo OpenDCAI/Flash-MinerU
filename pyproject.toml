@@ -1,21 +1,19 @@
 [build-system]
-requires = ["setuptools>=42", "wheel"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "flash-mineru"
-description = "Fast Inference Architecture for MinerU"
+description = "RayOrch-accelerated, versioned data pipelines for MinerU"
 readme = {file = "README.md", content-type = "text/markdown"}
-requires-python = ">=3.10, <4"
-license = {text = "Apache-2.0"}
+requires-python = ">=3.11, <4"
+license = "Apache-2.0"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
-    "License :: Free For Educational Use",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3 :: Only",
@@ -28,13 +26,18 @@ dynamic = ["version", "dependencies"]
 
 [project.urls]
 Github = "https://github.com/OpenDCAI/Flash-MinerU"
+Documentation = "https://github.com/OpenDCAI/Flash-MinerU#readme"
 "Bug Reports" = "https://github.com/OpenDCAI/Flash-MinerU/issues"
+
+[project.entry-points."vllm.general_plugins"]
+flash_mineru_transformers_5_compat = "flash_mineru._vllm_compat:register_transformers_5_compatibility"
 
 
 [tool.setuptools]
 include-package-data = true
-packages = ["flash_mineru"]  # 显式指定主包
 
+[tool.setuptools.packages.find]
+include = ["flash_mineru*"]
 
 [tool.setuptools.dynamic]
 version = {attr = "flash_mineru.version.__version__"}
@@ -42,4 +45,17 @@ dependencies = {file = "requirements.txt"}
 
 
 [project.optional-dependencies]
-vllm = ["vllm"]
+vllm = [
+    "mineru-vl-utils[vllm]>=1.0.5,<2",
+    "transformers>=4.57.3,<5",
+]
+mineru25 = [
+    "mineru[pipeline,vlm,vllm]>=3.4.4,<3.5",
+]
+mineru4 = [
+    "mineru[torch]>=4.0.5,<4.1",
+]
+mineru4-local-vllm = [
+    "mineru[torch]>=4.0.5,<4.1",
+    "vllm==0.10.1.1; sys_platform == 'linux'",
+]

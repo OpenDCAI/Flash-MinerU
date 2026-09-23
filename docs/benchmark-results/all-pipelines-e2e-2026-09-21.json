@@ -1,0 +1,246 @@
+{
+  "date": "2026-09-21",
+  "purpose": "End-to-end migration and native-output equivalence validation; single-document timings are diagnostic and are not performance claims.",
+  "implementation": {
+    "repository": "OpenDCAI/Flash-MinerU",
+    "base_commit": "1b62bc7e9f3e5c9489943483e0090661883d10f5",
+    "worktree_dirty_during_validation": true,
+    "rayorch": "0.1.0",
+    "rayorch_source": "PyPI"
+  },
+  "upstream": {
+    "mineru_3": "3.4.4",
+    "mineru_4": "4.0.5",
+    "mineru_4_commit": "94828a88d80ab8a72c21956de0604bf14f4cc9fc"
+  },
+  "hardware": {
+    "host_gpu_count": 4,
+    "gpu_model": "NVIDIA H20",
+    "gpus_used_per_runner": 1,
+    "driver_version": "535.247.01",
+    "cuda_version": "12.9"
+  },
+  "corpus": {
+    "pdfs": 1,
+    "pages": 12,
+    "bytes": 597053,
+    "sha256": "208ea5499e4872fd1a78841e17e5c5bb7caaec847fbb98778e6076d337f13808"
+  },
+  "v4_vlm_server": {
+    "used_by": [
+      "v4-standard",
+      "v4-advanced"
+    ],
+    "model": "MinerU2.5-Pro-2605-1.2B",
+    "protocol": "OpenAI-compatible HTTP",
+    "vllm": "0.10.1.1",
+    "mineru-vl-utils": "2.0.5",
+    "separate_gpu_from_pipeline_runner": true
+  },
+  "pipelines": [
+    {
+      "name": "v2.5",
+      "mineru": "3.4.4",
+      "granularity": "page",
+      "parse_mode": "auto",
+      "image_analysis": false,
+      "native": {
+        "successful_pdfs": 1,
+        "successful_pages": 12,
+        "wall_seconds": 57.15413235500455
+      },
+      "flash": {
+        "successful_pdfs": 1,
+        "successful_pages": 12,
+        "startup_seconds": 40.15856660529971,
+        "execution_seconds": 14.543494084849954,
+        "wall_seconds": 57.918920271098614,
+        "error": null
+      },
+      "equivalence": {
+        "valid_documents": 1,
+        "exact_markdown_documents": 0,
+        "page_count_mismatches": 0,
+        "block_count_differences": 0,
+        "token_jaccard_mean": 0.9934328358208955,
+        "token_multiset_f1_mean": 0.9983548975145614
+      }
+    },
+    {
+      "name": "v2.5-pro-2604",
+      "mineru": "3.4.4",
+      "granularity": "page",
+      "parse_mode": "auto",
+      "image_analysis": true,
+      "native": {
+        "successful_pdfs": 1,
+        "successful_pages": 12,
+        "wall_seconds": 66.07135800085962
+      },
+      "flash": {
+        "successful_pdfs": 1,
+        "successful_pages": 12,
+        "startup_seconds": 47.68340128287673,
+        "execution_seconds": 16.106283854693174,
+        "wall_seconds": 67.04008215107024,
+        "error": null
+      },
+      "equivalence": {
+        "valid_documents": 1,
+        "exact_markdown_documents": 0,
+        "page_count_mismatches": 0,
+        "block_count_differences": 0,
+        "token_jaccard_mean": 0.9912942542077772,
+        "token_multiset_f1_mean": 0.9985675632659557
+      }
+    },
+    {
+      "name": "v2.5-pro-2605",
+      "mineru": "3.4.4",
+      "granularity": "page",
+      "parse_mode": "auto",
+      "image_analysis": true,
+      "native": {
+        "successful_pdfs": 1,
+        "successful_pages": 12,
+        "wall_seconds": 65.18938609212637
+      },
+      "flash": {
+        "successful_pdfs": 1,
+        "successful_pages": 12,
+        "startup_seconds": 46.347424544394016,
+        "execution_seconds": 15.842537624761462,
+        "wall_seconds": 65.69308054819703,
+        "error": null
+      },
+      "equivalence": {
+        "valid_documents": 1,
+        "exact_markdown_documents": 0,
+        "page_count_mismatches": 0,
+        "block_count_differences": 0,
+        "token_jaccard_mean": 0.9970202622169249,
+        "token_multiset_f1_mean": 0.9987384173663375
+      }
+    },
+    {
+      "name": "v4-flash",
+      "mineru": "4.0.5",
+      "granularity": "whole document for TXT; windows for OCR",
+      "parse_mode": "txt",
+      "small_backend": "onnx",
+      "image_analysis": false,
+      "native": {
+        "successful_pdfs": 1,
+        "successful_pages": 12,
+        "wall_seconds": 6.181294344365597
+      },
+      "flash": {
+        "successful_pdfs": 1,
+        "successful_pages": 12,
+        "startup_seconds": 4.753894880414009,
+        "execution_seconds": 6.383203987032175,
+        "wall_seconds": 14.1768042370677,
+        "error": null
+      },
+      "equivalence": {
+        "valid_documents": 1,
+        "exact_markdown_documents": 1,
+        "page_count_mismatches": 0,
+        "block_count_differences": 0,
+        "token_jaccard_mean": 1.0,
+        "token_multiset_f1_mean": 1.0
+      }
+    },
+    {
+      "name": "v4-basic",
+      "mineru": "4.0.5",
+      "granularity": "window",
+      "window_size": 8,
+      "parse_mode": "txt",
+      "small_backend": "onnx",
+      "image_analysis": false,
+      "native": {
+        "successful_pdfs": 1,
+        "successful_pages": 12,
+        "wall_seconds": 57.759933423250914
+      },
+      "flash": {
+        "successful_pdfs": 1,
+        "successful_pages": 12,
+        "startup_seconds": 4.949334239587188,
+        "execution_seconds": 59.58190351165831,
+        "wall_seconds": 67.69755785726011,
+        "error": null
+      },
+      "equivalence": {
+        "valid_documents": 1,
+        "exact_markdown_documents": 1,
+        "page_count_mismatches": 0,
+        "block_count_differences": 0,
+        "token_jaccard_mean": 1.0,
+        "token_multiset_f1_mean": 1.0
+      }
+    },
+    {
+      "name": "v4-standard",
+      "mineru": "4.0.5",
+      "granularity": "window",
+      "window_size": 8,
+      "parse_mode": "txt",
+      "small_backend": "onnx",
+      "image_analysis": true,
+      "native": {
+        "successful_pdfs": 1,
+        "successful_pages": 12,
+        "wall_seconds": 49.85038139112294
+      },
+      "flash": {
+        "successful_pdfs": 1,
+        "successful_pages": 12,
+        "startup_seconds": 4.722010610625148,
+        "execution_seconds": 49.489351285621524,
+        "wall_seconds": 56.40061368793249,
+        "error": null
+      },
+      "equivalence": {
+        "valid_documents": 1,
+        "exact_markdown_documents": 1,
+        "page_count_mismatches": 0,
+        "block_count_differences": 0,
+        "token_jaccard_mean": 1.0,
+        "token_multiset_f1_mean": 1.0
+      }
+    },
+    {
+      "name": "v4-advanced",
+      "mineru": "4.0.5",
+      "granularity": "window",
+      "window_size": 8,
+      "parse_mode": "txt",
+      "small_backend": "onnx",
+      "image_analysis": true,
+      "native": {
+        "successful_pdfs": 1,
+        "successful_pages": 12,
+        "wall_seconds": 50.39899899996817
+      },
+      "flash": {
+        "successful_pdfs": 1,
+        "successful_pages": 12,
+        "startup_seconds": 4.554967841133475,
+        "execution_seconds": 51.637990379706025,
+        "wall_seconds": 59.00501792319119,
+        "error": null
+      },
+      "equivalence": {
+        "valid_documents": 1,
+        "exact_markdown_documents": 0,
+        "page_count_mismatches": 0,
+        "block_count_differences": 0,
+        "token_jaccard_mean": 0.9988242210464433,
+        "token_multiset_f1_mean": 0.9995930658419467,
+        "notes": "The VLM output differed only in small generated table-number details; page and block structure matched."
+      }
+    }
+  ]
+}

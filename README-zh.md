@@ -1,241 +1,229 @@
 # Flash-MinerU ⚡️📄
 
 <div align="center">
+<img width="220" height="220" alt="Flash-MinerU" src="https://github.com/user-attachments/assets/5a5ab2df-7e8d-41cc-83d8-1ab7ade6aef5" />
 
-<img width="256" height="256" alt="image" src="https://github.com/user-attachments/assets/5a5ab2df-7e8d-41cc-83d8-1ab7ade6aef5" />
+[![PyPI](https://img.shields.io/pypi/v/flash-mineru)](https://pypi.org/project/flash-mineru/)
+[![Python](https://img.shields.io/pypi/pyversions/flash-mineru)](https://pypi.org/project/flash-mineru/)
+[![Stars](https://img.shields.io/github/stars/OpenDCAI/Flash-MinerU?style=social)](https://github.com/OpenDCAI/Flash-MinerU)
+[![RayOrch Stars](https://img.shields.io/github/stars/OpenDCAI/RayOrch?style=social&label=RayOrch)](https://github.com/OpenDCAI/RayOrch)
+[![Issues](https://img.shields.io/github/issues/OpenDCAI/Flash-MinerU)](https://github.com/OpenDCAI/Flash-MinerU/issues)
 
-[![](https://img.shields.io/github/stars/OpenDCAI/Flash-MinerU?style=social)](https://github.com/OpenDCAI/Flash-MinerU)
-[![](https://img.shields.io/github/issues-raw/OpenDCAI/Flash-MinerU)](https://github.com/OpenDCAI/Flash-MinerU/issues)
-[![issue resolution](https://img.shields.io/github/issues-closed-raw/OpenDCAI/Flash-MinerU)](https://github.com/OpenDCAI/Flash-MinerU/issues?q=is%3Aissue%20state%3Aclosed)
-[![](https://img.shields.io/github/issues-pr-raw/OpenDCAI/Flash-MinerU)](https://github.com/OpenDCAI/Flash-MinerU/pulls)
-[![pr resolution](https://img.shields.io/github/issues-pr-closed-raw/OpenDCAI/Flash-MinerU)](https://github.com/OpenDCAI/Flash-MinerU/pulls?q=is%3Apr+is%3Aclosed)
-[![](https://img.shields.io/github/contributors/OpenDCAI/Flash-MinerU)](https://github.com/OpenDCAI/Flash-MinerU/graphs/contributors)
-[![](https://img.shields.io/github/repo-size/OpenDCAI/Flash-MinerU?color=green)](https://github.com/OpenDCAI/Flash-MinerU)
-
-
-[![PyPI version](https://img.shields.io/pypi/v/flash-mineru)](https://pypi.org/project/flash-mineru/)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/flash-mineru)](https://pypi.org/project/flash-mineru/)
-[![PyPI - Downloads](https://img.shields.io/pypi/dm/flash-mineru?style=flat&logo=python)](https://pypistats.org/packages/flash-mineru)
-[![PyPI Downloads](https://static.pepy.tech/personalized-badge/flash-mineru?period=total&units=ABBREVIATION&left_color=GREY&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/flash-mineru)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/OpenDCAI/Flash-MinerU)
-
-简体中文 | [English](./README.md)
-
+简体中文 | [English](./README.md) · [Benchmark](./docs/BENCHMARK.zh.md) · [实验结果](./docs/benchmark-results/)
 </div>
 
-> 使用 **Ray** 加速 MinerU 的 **VLM 推理流水线**，把 PDF 解析变成一个**可扩展的数据基础设施组件**
+Flash-MinerU 是 [RayOrch](https://github.com/OpenDCAI/RayOrch) 的衍生项目，为 [MinerU](https://github.com/opendatalab/MinerU) 提供轻量级 RayOrch 执行层。它把 PDF 解析变成一条带血缘的数据流水线：将 PDF 拆成页面或窗口，把不同文档中已经就绪的任务交给共享 CPU/GPU Actor 批处理，最后按照正确的文档归属和页序还原结果。
 
-Flash-MinerU 是 MinerU 的一层**轻量、低侵入**加速层。它不仅提升 VLM 推理速度，更将 PDF 解析升级为一条**高吞吐、可分布式扩展的数据流水线**，成为现代 AI 系统中的重要基础模块。
+Flash-MinerU 不替换 MinerU 的模型和输出格式。每一代受支持的 MinerU 都对应一条显式、版本化的管线，应用可以逐条升级，同时保持一套精简的 Python API。
 
-PDF 是最重要的**高质量知识源**之一，例如论文、报告、说明书。将它们转换成 **Markdown / JSON** 这类**结构化、可直接喂给模型的数据**，是以下场景的基础步骤：
+> [!IMPORTANT]
+> Flash-MinerU 是 OpenDCAI 独立维护的项目，并非 MinerU 官方发行版。项目在仓库许可证约束下复用并适配 MinerU 运行时组件，但 RayOrch DAG、多 GPU 调度、发布节奏、测试过的依赖组合和性能结果均由 Flash-MinerU 维护。如果问题只在 Flash-MinerU 管线中出现，请在本仓库反馈；如果使用 MinerU 官方执行方式也能复现，再向 MinerU 上游反馈。
 
-- 📊 **数据治理与数据整理**
-- 🧪 **合成数据生成流水线**
-- 🧠 **LLM / MLLM 训练与评测**
-
-Flash-MinerU 的目标，就是让这一阶段**可扩展、高效率、可用于生产**：
-
-- **依赖少、安装轻量**
-  - 一行命令即可安装：`pip install flash-mineru`
-  - 可运行在受限环境或国产算力环境（如 METAX）
-- **做系统级加速，而不是重写算法**
-  - 完整复用 MinerU 原有逻辑与数据结构
-  - 保持输出结果一致
-- **面向规模化设计**
-  - 支持多卡 / 多进程 / 多节点扩展
-  - 基于 **Ray** 作为统一执行层
-
----
-
-## ✨ Features
-
-- 🚀 **Ray 驱动的分布式执行**  
-  将 PDF 解析变成一条**可扩展的数据流水线**，既支持单机多卡，也可扩展到集群
-
-- 🧠 **高吞吐 VLM 推理**  
-  聚焦最核心的瓶颈阶段，当前默认基于 **vLLM**
-
-- 🔄 **流水线并行执行（核心改进）**  
-  通过跨阶段重叠的异步流水线，持续维持较高利用率
-
-- 🧩 **低侵入、可组合的设计**  
-  保留 MinerU 的 `middle_json` 与下游逻辑，方便集成进现有系统
-
----
-
-## 🎯 流水线并行如何提速
-
-Flash-MinerU 将 MinerU 原本顺序执行的流水线，改造成一套**异步流水线系统**：
-
-- 🟢 **GPU 利用率显著更高**  
-  GPU 可在 **90% 以上时间保持忙碌**；而原版 MinerU 常因阶段阻塞而只有 **40%-50%** 左右
-
-- 🔄 **跨阶段重叠（核心提速点）**  
-  不同 batch 会同时处在不同阶段，例如 render / VLM / Markdown，而不是等上一批整条链路跑完
-
-- ⚡ **结果就是整体吞吐大幅提升**  
-  更少空闲时间，加上更多阶段重叠，最终带来**显著更快的端到端处理速度**
-
-<table width="100%">
-<tr>
-<td width="50%" valign="top" align="center">
-<strong>左 — 空泡（优化前）</strong><br/>
-<em>分批串行执行；GPU 存在明显空闲。</em><br/><br/>
-<img src="./docs/bubble.png" alt="时序图：分批串行执行，GPU 有明显空闲" width="100%" />
-</td>
-<td width="50%" valign="top" align="center">
-<strong>右 — 流水线并行（Flash-MinerU）</strong><br/>
-<em>异步流水线；整体利用率更高。</em><br/><br/>
-<img src="./docs/pipelined.png" alt="时序图：异步流水线执行，GPU 利用率更高" width="100%" />
-</td>
-</tr>
-</table>
-
----
-
-## 📦 Installation
-
-### 基础安装（轻量模式）
-
-适用于你已经**手动安装好推理引擎**（如 vLLM），或使用包含完整环境的镜像场景：
-
-```bash
-pip install flash-mineru
+```mermaid
+flowchart LR
+    A[PDF 文档] --> B[有序页面 / 窗口]
+    B --> C[CPU 渲染]
+    C --> D[共享 GPU Actor 池<br/>跨文档批处理]
+    D --> E[恢复血缘与顺序]
+    E --> F[Markdown / JSON]
 ```
 
-### 安装并启用 vLLM 后端（可选）
+## 为什么使用 Flash-MinerU？
 
-如果你希望由 Flash-MinerU 一并安装 vLLM 作为推理后端：
+模型驱动的文档流水线通常不只受单次模型调用限制：文档长度不同，CPU 与 GPU 阶段推进速度不同，而跨文档组 batch 又不能丢失文档归属和页序。Flash-MinerU 使用 RayOrch 重叠不同阶段、聚合不同文档中已经就绪的任务，并在整个 DAG 中显式保留血缘。
 
-```bash
-pip install flash-mineru[vllm]
-```
+`v4-advanced-shared` 还展示了共享 Actor 复用：`Infer` 与 `Finish` 是两个独立的逻辑 DAG Call，但由同一个四副本物理模型池执行。每个 Actor 只加载一套完整模型栈，中间状态通过 RayOrch Port 传递，不依赖请求再次落到同一副本。在 368 PDF 实测中，它把 `v4-advanced-local` 的执行时间从 1,350.25 秒降到 1,234.60 秒，进一步提升 **9.4%**。
 
----
+## 实测结果
 
-## 🚀 Quickstart
+下表使用同一组 368 个 PDF（7,072 页）和 4× NVIDIA H20。“执行阶段”只统计 Actor 初始化完成后的 `Executor.run`，“冷启动”包含 Ray 启动、模型初始化、执行与清理；输出质量与对应的原生 MinerU 结果比较。
 
-### 最简 Python API 示例
+| 管线 | Native | Flash 执行阶段 | 执行阶段加速 | 冷启动加速 | 平均 Jaccard / F1 |
+|---|---:|---:|---:|---:|---:|
+| `v2.5` | 1,177.01 s | 439.72 s | **2.68×** | 2.42× | 0.9902 / 0.9931 |
+| `v2.5-pro-2604` | 1,449.57 s | 545.72 s | **2.66×** | 2.42× | 0.9898 / 0.9869 |
+| `v2.5-pro-2605` | 1,468.23 s | 553.58 s | **2.65×** | 2.43× | 0.9903 / 0.9883 |
+| `v4-flash` | 1,044.69 s | 1,157.28 s | 0.90× | 0.90× | 0.9997 / 0.9999 |
+| `v4-basic` | 1,642.11 s | 1,550.47 s | 1.06× | 1.05× | 0.9999 / 1.0000 |
+| `v4-standard` | 1,822.74 s | 1,435.38 s | **1.27×** | 1.26× | 1.0000 / 0.9999 |
+| `v4-advanced` | 2,559.79 s | 1,899.27 s | **1.35×** | 1.34× | 0.9934 / 0.9906 |
+| `v4-advanced-local` | 1,942.44 s | 1,350.25 s | **1.44×** | 1.42× | 0.9940 / 0.9911 |
+| `v4-advanced-shared` | 1,942.44 s | **1,234.60 s** | **1.57×** | **1.56×** | 0.9945 / 0.9906 |
+
+所有实验均完成 368/368 个文档和 7,072/7,072 页，没有页数不一致。`v4-flash` 被如实保留为负向结果：该负载缺少昂贵且适合 batch 的模型阶段，因此更细的 DAG 带来了额外开销，而非吞吐收益。完整配置、计时口径、质量校验和 batch 消融见 [Benchmark 文档](./docs/BENCHMARK.zh.md)与[机器可读结果](./docs/benchmark-results/)。
+
+## 安装
+
+MinerU 2.5 与 MinerU 4 依赖不同的大版本运行栈。轻量 Driver 可以只安装基础包；推理环境请选择且只选择一组 runtime extra。
+
+| 安装命令 | 用途 |
+|---|---|
+| `pip install flash-mineru` | 公共 API、RayOrch 和轻量 Driver |
+| `pip install "flash-mineru[mineru25]"` | MinerU 2.5 与 2.5 Pro 管线 |
+| `pip install "flash-mineru[mineru4]"` | MinerU 4 小模型与外部 HTTP VLM Server |
+| `pip install "flash-mineru[mineru4-local-vllm]"` | MinerU 4 本地 vLLM，包括 `v4-advanced-local` 与 `v4-advanced-shared` |
+
+不要在同一个环境中同时安装 MinerU 2.5 与 MinerU 4 extras。如果一个 Driver 需要运行两代管线，请使用独立 conda 环境和 RayOrch `runtime_env`。`flash-mineru[vllm]` 仅作为旧版 MinerU 2.5 兼容别名保留，新环境不建议使用。
+
+## 准备模型
+
+模型准备是显式操作：导入 Flash-MinerU 不会自动下载 checkpoint。
+
+### 使用已有本地 checkpoint
 
 ```python
-from flash_mineru import MineruEngine
+from flash_mineru import prepare_pipeline
 
-# PDF的路径
-pdfs = [
-    "resnet.pdf",
-    "yolo.pdf",
-    "text2sql.pdf",
-]
-
-engine = MineruEngine(
-    model="<path_to_local>/MinerU2.5-2509-1.2B",
-    # 模型可从 https://huggingface.co/opendatalab/MinerU2.5-2509-1.2B 下载
-    batch_size=16,             # 每个逻辑 batch 内 PDF 数，建议为GPU数量的整数倍
-    replicas=8,                # 并行 vLLM / 模型实例数，建议等于GPU数量
-    num_gpus_per_replica=0.9, # 每个实例占用的 GPU 显存比例（vLLM KV cache），1就是吃满当前显存
-    save_dir="outputs_mineru", # 解析结果保存路径
-    inflight=4,                # 流水线并行深度（v1.0.0 默认路径；内存大的机器可以调大，但边际效应显著）
+model = prepare_pipeline(
+    "v2.5",
+    model="/shared/models/MinerU2.5-2509-1.2B",
 )
-
-# 旧版 v0.0.4 顺序 batch API（弃用）：from flash_mineru import MineruEngineLegacy
-
-results = engine.run(pdfs)
-print(results)  # list[list[str]], 输出文件夹的名称
 ```
 
-### 输出说明
+### 下载 MinerU 2.5 checkpoint
 
-* 每个 PDF 的解析结果会生成在：
+```python
+model = prepare_pipeline(
+    "v2.5-pro-2605",             # 使用注册表中的默认 Hugging Face 仓库。
+    download=True,                # 只有显式开启才会访问网络。
+    cache_dir="/shared/hf-cache",
+)
+```
 
-  ```
-  <save_dir>/<pdf_name>/
-  ```
+当前注册的默认模型是 `opendatalab/MinerU2.5-2509-1.2B`、`opendatalab/MinerU2.5-Pro-2604-1.2B` 和 `opendatalab/MinerU2.5-Pro-2605-1.2B`。
 
-* Markdown 文件默认位于：
+### 准备 MinerU 4 模型根目录
 
-  ```
-  <save_dir>/<pdf_name>/vlm/<pdf_name>.md
-  ```
+MinerU 4 使用模型根目录，而不是单个 checkpoint 目录。请在 MinerU 4 环境中完成准备，并把目录放到所有 Worker 都能访问的共享存储：
 
----
+```python
+model_root = prepare_pipeline(
+    "v4-advanced-shared",
+    model="/shared/models/mineru4",
+    download=True,
+)
+```
 
-## 📊 Benchmark
+默认 `download=False`。此时轻量 Driver 可以直接传入已有共享目录，最终的 runtime 与模型校验会在 Actor 启动时执行。配置外部 `vlm_server_url` 后，`v4-standard` 与 `v4-advanced` 本地只需要准备小模型；`v4-advanced-local` 与 `v4-advanced-shared` 必须使用本地 vLLM 模型，不接受 HTTP VLM Server。
 
-**脚本用法：** [简体中文](./docs/BENCHMARK.zh.md) · [English](./docs/BENCHMARK.md)
+## 运行
 
-### 实验结果（368 PDF、单机 8× A100 量级）
+### 推荐 Python API
 
-| 方案 | 推理配置 | 总耗时 |
-|----|----|----|
-| Flash-MinerU **v1.0.0** | `MineruEngine`，8 replica，`inflight=8`，流水线并行 | **~8.5 min** |
-| MinerU（原生） | **手动** 8 个 `mineru` 进程池（Benchmark 脚本 **parallel** 模式，每进程一卡，`vlm-auto-engine`） | ~14 min |
-| Flash-MinerU **v0.0.4** | `MineruEngineLegacy`，8 replica × 1 GPU，`batch_size=16`，batch化串行 | ~23 min |
-| MinerU（原生） | vLLM，**单卡** | ~65 min |
+```python
+from flash_mineru import MineruEngine, prepare_pipeline
 
-命令见 [docs/BENCHMARK.zh.md](./docs/BENCHMARK.zh.md)。
+pdfs = ["paper-a.pdf", "paper-b.pdf"]
+model = prepare_pipeline("v2.5", model="/shared/models/MinerU2.5-2509-1.2B")
 
-### 结论
+with MineruEngine(
+    pipeline_version="v2.5",
+    model=model,
+    save_dir="outputs",
+    replicas=4,             # 通常每张 GPU 对应一个模型 Actor。
+    batch_size=16,          # 为兼容旧 API，对返回路径进行分组。
+    ocr_batch_size=128,     # 一次模型调用聚合的就绪页面数。
+    input_batch_size=24,    # 一个 RayOrch 输入 batch 接纳的 PDF 数。
+    inflight=4,             # 允许同时推进的输入 batch 数。
+) as engine:
+    results = engine.run(pdfs)
 
-- **v1.0.0** 相对「手动 8 进程」基线约 **~1.7×** 速度（约 ~8.5 min vs ~14 min）
-- **v0.0.4**（`MineruEngineLegacy`）慢于该 8 进程基线（约 ~23 min），可见流水线并行相对「多进程各起一套模型」的收益
-- **单卡 ~65 min** 为同语料量级的对照基线
+print(results)
+```
 
-<details>
-<summary><strong>实验设置（展开）</strong></summary>
+上下文管理器会在运行结束后释放常驻 Ray Actor。如果需要复用同一个 Engine 执行多次任务，可以长期持有实例，并在最后调用 `engine.close()`。
 
-- **数据集**：23 篇论文 PDF（每篇约 9～37 页）各复制 16 份，共 **368** 个文件；默认目录 `test/sample_pdfs`
-- **版本**：MinerU 官方 **v2.7.5**；Flash-MinerU **v0.0.4** = `MineruEngineLegacy`（按 batch 顺序跑各阶段）；**v1.0.0** = `MineruEngine`（流水线并行，默认 API）
-- **硬件**：单机 **8 × NVIDIA A100**
+如果希望从安装开始直接跑通，或者需要九条内置管线各自可复制的配置，请阅读 **[运行全部管线](./docs/PIPELINES.zh.md)**。建议先用一个 PDF 和 `replicas=1` 验证输出，再把副本数提升到可用 GPU 数量。
 
-</details>
+### MinerU 4 Advanced 共享 Actor 池
 
-> 注：关注整体吞吐；输出结构与 MinerU 对齐。上游并无成熟的「官方多卡一键并行」，表中 8 进程行来自本仓库 **Benchmark-mineru.py** 的手动分片方式。
+```python
+from flash_mineru import MineruEngine, prepare_pipeline
 
----
+model_root = prepare_pipeline(
+    "v4-advanced-shared",
+    model="/shared/models/mineru4",
+)
 
-## 🗺️ Roadmap 未来计划
-* [x] Benchmark 脚本与文档 — [docs/BENCHMARK.zh.md](./docs/BENCHMARK.zh.md)
-* [ ] 支持更多推理后端（如 sglang）
-* [ ] 服务化形态（HTTP API / 任务队列）
-* [ ] 示例数据与更完整的文档
+with MineruEngine(
+    pipeline_version="v4-advanced-shared",
+    model=model_root,
+    save_dir="outputs-v4",
+    replicas=4,
+    batch_size=16,
+    ocr_batch_size=16,                  # 共享 Actor 池的实测默认值。
+    input_batch_size=16,
+    inflight=3,
+    num_gpus_per_replica=1.0,           # Ray 为每个 Actor 预留一张 GPU。
+    engine_gpu_util_rate_to_ray_cap=0.1,# 本地 vLLM 的显存利用率配置。
+    image_analysis=True,
+) as engine:
+    results = engine.run(pdfs)
+```
 
----
+### 已有 Ray 集群或独立 Actor 环境
 
-## 🤝 Acknowledgements / 致敬
-* **MinerU**
-  本项目基于 MinerU 的整体算法设计与工程实践，对其 VLM 推理 Pipeline 进行并行化加速。
-  `mineru_core/` 目录中包含从 MinerU 项目中复制并适配的代码逻辑。
-  向 MinerU 的原作者及所有贡献者致以诚挚的敬意与感谢。
-  🔗 官方仓库 / 主页：
-  [https://github.com/opendatalab/MinerU](https://github.com/opendatalab/MinerU)
+```python
+import ray
+from flash_mineru import MineruEngine
 
-* **Ray**
-  提供强大的分布式与并行计算抽象，使多 GPU / 多进程编排更加简单可靠。
-  🔗 官方网站：
-  [https://www.ray.io/](https://www.ray.io/)
-  🔗 官方 GitHub：
-  [https://github.com/ray-project/ray](https://github.com/ray-project/ray)
+ray.init(address="auto")
 
-* **vLLM**
-  提供高吞吐、工程化成熟的推理引擎能力（当前默认推理后端）。
-  🔗 官方网站：
-  [https://vllm.ai/](https://vllm.ai/)
-  🔗 官方 GitHub：
-  [https://github.com/vllm-project/vllm](https://github.com/vllm-project/vllm)
+with MineruEngine(
+    pipeline_version="v4-standard",
+    model="/shared/models/mineru4",
+    save_dir="outputs-v4",
+    replicas=3,
+    batch_size=16,
+    runtime_env={"conda": "mineru4"},
+    vlm_server_url="http://vlm-server:8000/v1",
+) as engine:
+    results = engine.run(pdfs)
+```
 
+对应 conda 环境必须存在于 Worker 节点，并安装 Flash-MinerU 与所选 MinerU runtime。PDF 路径、模型根目录和输出目录也必须能被这些 Worker 访问。
 
----
+## 管线
+
+```python
+from flash_mineru import pipeline_names
+
+print(pipeline_names())
+```
+
+| 管线 | Runtime | 执行形态 |
+|---|---|---|
+| `v2.5` | `mineru25` | 在共享 VLM 池上进行跨文档页面 batching |
+| `v2.5-pro-2604`, `v2.5-pro-2605` | `mineru25` | 页面 batching 后恢复文档顺序，再执行跨页表格合并 |
+| `v4-flash`, `v4-basic` | `mineru4` | 对本地小模型阶段进行窗口调度 |
+| `v4-standard`, `v4-advanced` | `mineru4` | 本地小模型加共享 HTTP 或本地 VLM |
+| `v4-advanced-local` | `mineru4-local-vllm` | 每个 GPU Actor 常驻一套完整本地模型栈 |
+| `v4-advanced-shared` | `mineru4-local-vllm` | 独立 Infer/Finish Call 复用同一个常驻 Actor 池 |
+
+每条实现都独立存放在 `flash_mineru/pipelines/<version>/`，包含自己的 Pipeline、UDF 和模型准备逻辑。这样可以隔离 MinerU 上游版本变化，也让新增管线更容易理解和审查。
+
+表中的 Runtime 表示所需安装 extra，不意味着不同 MinerU 大版本可以混装。模型准备、外部 Server 要求、可运行示例、建议起始参数和常见问题见[管线运行指南](./docs/PIPELINES.zh.md)。
+
+## 输出
+
+MinerU 2.5 的结果默认位于：
+
+```text
+<save_dir>/<pdf_name>/vlm/<pdf_name>.md
+```
+
+MinerU 4 保留对应 tier 的目录结构：
+
+```text
+<save_dir>/<pdf_name>/<flash|basic|standard|advanced>/markdown.md
+```
+
+`MineruEngine.run()` 保留历史上的 `list[list[str]]` 返回结构。`MineruEngineLegacy` 继续兼容旧版顺序实现，但新集成应使用 `MineruEngine`。
+
+## 致谢
+
+Flash-MinerU 构建于 [MinerU](https://github.com/opendatalab/MinerU)、[Ray](https://github.com/ray-project/ray)、[RayOrch](https://github.com/OpenDCAI/RayOrch) 和 [vLLM](https://github.com/vllm-project/vllm) 之上，感谢这些项目的作者与贡献者。
 
 ## 许可证
 
-Flash-MinerU 基于 **MinerU** 开发，并包含经修改后的 MinerU 源代码。
-
-本仓库依据 **MinerU Open Source License**（即 Apache License 2.0 加附加条款）进行许可，具体内容见 [LICENSE](./LICENSE)。
-
-特别地，使用者应注意 MinerU Open Source License 中的以下义务：
-- 当适用的月活跃用户数（MAU）或收入达到相应门槛时，需要另行取得商业许可；以及
-- 如果您基于本项目向第三方提供在线服务，您必须清晰标明其中使用了 MinerU。
-
-为便于参考，Apache License 2.0 的全文收录于 [`licenses/APACHE-2.0.txt`](./licenses/APACHE-2.0.txt)。
-
-第三方依赖仍分别适用其各自的许可证。
+Flash-MinerU 基于 MinerU 开发，并包含修改后的 MinerU 源代码。本仓库采用 [MinerU Open Source License](./LICENSE)，即 Apache License 2.0 加附加条款；部署前请仔细阅读其中的商业使用门槛与署名要求。第三方依赖仍适用各自许可证，Apache License 2.0 全文收录于 [`licenses/APACHE-2.0.txt`](./licenses/APACHE-2.0.txt)。
