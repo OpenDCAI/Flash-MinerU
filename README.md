@@ -3,17 +3,28 @@
 <div align="center">
 <img width="220" height="220" alt="Flash-MinerU" src="https://github.com/user-attachments/assets/5a5ab2df-7e8d-41cc-83d8-1ab7ade6aef5" />
 
-[![PyPI](https://img.shields.io/pypi/v/flash-mineru)](https://pypi.org/project/flash-mineru/)
-[![Python](https://img.shields.io/pypi/pyversions/flash-mineru)](https://pypi.org/project/flash-mineru/)
-[![Stars](https://img.shields.io/github/stars/OpenDCAI/Flash-MinerU?style=social)](https://github.com/OpenDCAI/Flash-MinerU)
-[![Issues](https://img.shields.io/github/issues/OpenDCAI/Flash-MinerU)](https://github.com/OpenDCAI/Flash-MinerU/issues)
+[![](https://img.shields.io/github/stars/OpenDCAI/Flash-MinerU?style=social)](https://github.com/OpenDCAI/Flash-MinerU)
+[![](https://img.shields.io/github/issues-raw/OpenDCAI/Flash-MinerU)](https://github.com/OpenDCAI/Flash-MinerU/issues)
+[![issue resolution](https://img.shields.io/github/issues-closed-raw/OpenDCAI/Flash-MinerU)](https://github.com/OpenDCAI/Flash-MinerU/issues?q=is%3Aissue%20state%3Aclosed)
+[![](https://img.shields.io/github/issues-pr-raw/OpenDCAI/Flash-MinerU)](https://github.com/OpenDCAI/Flash-MinerU/pulls)
+[![pr resolution](https://img.shields.io/github/issues-pr-closed-raw/OpenDCAI/Flash-MinerU)](https://github.com/OpenDCAI/Flash-MinerU/pulls?q=is%3Apr+is%3Aclosed)
+[![](https://img.shields.io/github/contributors/OpenDCAI/Flash-MinerU)](https://github.com/OpenDCAI/Flash-MinerU/graphs/contributors)
+[![](https://img.shields.io/github/repo-size/OpenDCAI/Flash-MinerU?color=green)](https://github.com/OpenDCAI/Flash-MinerU)
+
+[![PyPI version](https://img.shields.io/pypi/v/flash-mineru)](https://pypi.org/project/flash-mineru/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/flash-mineru)](https://pypi.org/project/flash-mineru/)
+[![PyPI - Downloads](https://img.shields.io/pypi/dm/flash-mineru?style=flat&logo=python)](https://pypistats.org/packages/flash-mineru)
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/flash-mineru?period=total&units=ABBREVIATION&left_color=GREY&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/flash-mineru)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/OpenDCAI/Flash-MinerU)
 
 [简体中文](./README-zh.md) | English · [Benchmark](./docs/BENCHMARK.md) · [Results](./docs/benchmark-results/)
 </div>
 
-Flash-MinerU is a downstream project of [RayOrch](https://github.com/OpenDCAI/RayOrch) [![RayOrch Stars](https://img.shields.io/github/stars/OpenDCAI/RayOrch?style=social&label=RayOrch)](https://github.com/OpenDCAI/RayOrch), built as a lightweight RayOrch execution layer for [MinerU](https://github.com/opendatalab/MinerU). It turns PDF parsing into a lineage-aware pipeline: PDFs are split into pages or windows, ready work from different documents is batched on shared CPU/GPU actors, and results are restored to the correct document and page order.
+> **Scale PDF understanding without flattening document lineage.**
 
-It does not replace MinerU's models or output format. Each supported MinerU generation lives in an explicit, versioned pipeline, so applications can upgrade one pipeline at a time while keeping a small Python API.
+Flash-MinerU is a versioned, RayOrch-powered execution layer for [MinerU](https://github.com/opendatalab/MinerU). It turns each PDF into page or window work (`1 → M`), batches ready work from different documents on shared CPU/GPU actors, and reduces the results back to the correct document and order (`M → 1`).
+
+It keeps MinerU's models and output conventions. Each supported MinerU runtime/version is isolated in an explicit pipeline, so applications can upgrade one path at a time while keeping one small Python API.
 
 > [!IMPORTANT]
 > Flash-MinerU is an independent OpenDCAI project, not an official MinerU distribution. It reuses and adapts MinerU runtime components under the repository license, while its RayOrch DAGs, multi-GPU scheduling, release cadence, tested dependency combinations, and performance claims are maintained by Flash-MinerU. Please report Flash-MinerU pipeline issues here; report upstream model/runtime issues to MinerU when they also reproduce with official MinerU.
@@ -27,9 +38,32 @@ flowchart LR
     E --> F[Markdown / JSON]
 ```
 
-## Why Flash-MinerU?
+## How the layers fit together
 
-A model-hosted document pipeline is usually limited by scheduling rather than a single model call: documents have different lengths, CPU and GPU stages progress at different rates, and batching must not lose document ownership or page order. Flash-MinerU uses RayOrch to overlap stages, batch ready work across documents, and keep lineage explicit throughout the DAG.
+The three names describe different responsibilities:
+
+| Layer | Responsibility in this project |
+|---|---|
+| [**MinerU**](https://github.com/opendatalab/MinerU) | Parses a page or window and produces the document artifacts and output conventions. |
+| [**Ray**](https://github.com/ray-project/ray) | Supplies the physical distributed runtime: actors, GPU placement, resources, RPCs, and object storage. |
+| [**RayOrch**](https://github.com/OpenDCAI/RayOrch) | Supplies the logical dataflow: explicit fan-out/fan-in, lineage, readiness, cross-document batching, and ordered reconstruction. |
+| **Flash-MinerU** | Connects each supported MinerU version to a versioned RayOrch pipeline and exposes one `MineruEngine` API. |
+
+Ray can run the actors, but the application still needs a rule for which page belongs to which PDF, when a parent is complete, and how out-of-order results are rebuilt. RayOrch keeps those rules outside the model code; Flash-MinerU fills the stages with MinerU operations.
+
+### What `1 → M → 1` means here
+
+For one input PDF, the pipeline has three logical steps:
+
+1. **`1 → M` — expand:** render one PDF into a variable number of pages or windows. Each child keeps its parent document and ordinal.
+2. **Batch ready children:** pages or windows from different PDFs can share one CPU/GPU actor batch. The physical batch is temporary; it does not change ownership or order.
+3. **`M → 1` — reduce:** collect the completed children by parent and ordinal, then write one ordered document result. A document can finish as soon as its own children are ready.
+
+This is why the system can improve accelerator utilization without flattening the document contract: the physical schedule is shared, while the logical lineage remains per document.
+
+## Why the execution layer matters
+
+A model-hosted document pipeline is usually limited by scheduling rather than a single model call: documents have different lengths, CPU and GPU stages progress at different rates, and batching must not lose document ownership or page order. Flash-MinerU uses RayOrch to overlap those stages, batch ready work across documents, and keep lineage explicit throughout the DAG.
 
 The `v4-advanced-shared` pipeline also demonstrates shared actor reuse: `Infer` and `Finish` are separate logical DAG calls but run on the same physical four-replica model pool. Each actor loads one complete model stack, while intermediate state travels through RayOrch ports instead of relying on replica affinity. On the validated 368-PDF workload this reduced execution time from 1,350.25 s for `v4-advanced-local` to 1,234.60 s, a further **9.4% improvement**.
 
@@ -50,6 +84,21 @@ The following results use the same 368 PDFs (7,072 pages) on 4× NVIDIA H20. “
 | `v4-advanced-shared` | 1,942.44 s | **1,234.60 s** | **1.57×** | **1.56×** | 0.9945 / 0.9906 |
 
 All runs completed 368/368 documents and 7,072/7,072 pages without page-count mismatches. `v4-flash` is included as a transparent negative result: its workload has little expensive batchable model work, so a finer-grained DAG adds overhead instead of improving throughput. See the [benchmark methodology](./docs/BENCHMARK.md) and [machine-readable results](./docs/benchmark-results/) for configurations, timing policy, quality checks, and batch ablations.
+
+These numbers describe the published 1.1.0 benchmark configuration, not a universal speed guarantee. Choose a pipeline for its model/runtime compatibility first, then tune replicas and batching on your own workload.
+
+## Choose a pipeline
+
+There are four practical pipeline families. The exact names are versioned because MinerU 2.5 and MinerU 4 do not share a dependency stack.
+
+| Family | Pipeline names | Install extra | Execution shape |
+|---|---|---|---|
+| MinerU 2.5 | `v2.5`, `v2.5-pro-2604`, `v2.5-pro-2605` | `mineru25` | Cross-document page batching on a shared VLM pool |
+| MinerU 4 local stages | `v4-flash`, `v4-basic` | `mineru4` | Window scheduling for local small-model stages; no VLM endpoint |
+| MinerU 4 with a VLM service | `v4-standard`, `v4-advanced` | `mineru4` | Local small models plus a shared HTTP or local VLM |
+| MinerU 4 local vLLM | `v4-advanced-local`, `v4-advanced-shared` | `mineru4-local-vllm` | Local model stacks; `shared` reuses one actor pool across logical calls |
+
+For model preparation, server requirements, and a runnable command for every name, use the [pipeline guide](./docs/PIPELINES.md).
 
 ## Installation
 
@@ -182,7 +231,7 @@ with MineruEngine(
 
 The named environment must exist on the worker nodes and contain Flash-MinerU plus the selected MinerU runtime. PDF paths, model roots, and output paths must be visible from those workers.
 
-## Pipelines
+## Pipeline catalog
 
 ```python
 from flash_mineru import pipeline_names
@@ -225,4 +274,4 @@ Flash-MinerU builds on [MinerU](https://github.com/opendatalab/MinerU), [Ray](ht
 
 ## License
 
-Flash-MinerU is based on and contains modified source code from MinerU. This repository is licensed under the [MinerU Open Source License](./LICENSE), which is Apache License 2.0 with additional terms. Please review its commercial-use thresholds and attribution requirements before deployment. Third-party dependencies remain under their respective licenses; the Apache License 2.0 text is included at [`licenses/APACHE-2.0.txt`](./licenses/APACHE-2.0.txt).
+Flash-MinerU is based on and contains modified source code from MinerU. This repository is licensed under the [MinerU Open Source License](./LICENSE), which is Apache License 2.0 with additional terms. Please review its commercial-use thresholds and attribution requirements before deployment. Third-party dependencies remain under their respective licenses; the complete repository license text is in [`LICENSE`](./LICENSE).
